@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zentrale</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root{ --card-radius: 18px; }
+        body{
+            background: radial-gradient(1200px 600px at 20% 0%, #1b3a2a 0%, rgba(27,58,42,0) 55%),
+            radial-gradient(1000px 500px at 80% 10%, #2a1b3a 0%, rgba(42,27,58,0) 55%),
+            #0b0f14;
+            color:#e9eef5;
+        }
+        .navbar{
+            backdrop-filter: blur(10px);
+            background: rgba(10, 14, 20, 0.65) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .card{
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.06);
+            border-radius: var(--card-radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        }
+        .form-control, .form-select{
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #e9eef5;
+        }
+        .form-control:focus, .form-select:focus{
+            box-shadow: 0 0 0 .25rem rgba(13,110,253,0.18);
+            border-color: rgba(13,110,253,0.55);
+        }
+        .table{ color:#e9eef5; }
+        .table thead th{
+            background: rgba(255,255,255,0.07);
+            border-bottom: 1px solid rgba(255,255,255,0.10);
+        }
+        .table tbody td{ border-color: rgba(255,255,255,0.10); }
+        .badge-soft{
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #e9eef5;
+        }
+        .small-muted{ color: rgba(233,238,245,0.72); }
+        .amount-pos{ color:#57e389; font-variant-numeric: tabular-nums; }
+        .amount-neg{ color:#ff6b6b; font-variant-numeric: tabular-nums; }
+        .amount-zero{ color:#cbd5e1; font-variant-numeric: tabular-nums; }
+        canvas{ max-height: 360px; }
+        .modal-content{
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(12, 16, 22, 0.95);
+            border-radius: 18px;
+        }
+    </style>
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container py-2">
+        <a class="navbar-brand fw-semibold" href="#">Zentrale</a>
+
+        <div class="ms-auto d-flex gap-2 align-items-center">
+            <span class="badge badge-soft" id="authStatus">Nicht eingeloggt</span>
+            <button class="btn btn-sm btn-outline-light d-none" id="btnLogout">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<main class="container my-4">
+
+    <!-- AUTH AREA -->
+    <div id="authArea" class="row g-3">
+        <div class="col-12 col-lg-6">
+            <div class="card p-3 p-md-4 h-100">
+                <h1 class="h4 mb-1">Login</h1>
+                <div class="small-muted mb-3">Melde dich an, um deine Einträge zu verwalten.</div>
+
+                <form id="loginForm" class="row g-2">
+                    <div class="col-12">
+                        <label class="form-label small-muted mb-1">E-Mail</label>
+                        <input class="form-control" type="email" id="loginEmail" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small-muted mb-1">Passwort</label>
+                        <input class="form-control" type="password" id="loginPassword" required>
+                    </div>
+                    <div class="col-12 d-grid mt-2">
+                        <button class="btn btn-primary btn-lg" type="submit">Einloggen</button>
+                    </div>
+                </form>
+
+                <hr class="border border-light border-opacity-10 my-3">
+
+                <div class="d-grid">
+                    <button class="btn btn-outline-light" id="btnGoogle">Mit Google einloggen</button>
+                </div>
+
+                <div class="small text-danger mt-3" id="authMsg"></div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card p-3 p-md-4 h-100">
+                <h2 class="h4 mb-1">Registrieren</h2>
+                <div class="small-muted mb-3">Account erstellen (E-Mail & Passwort). Username wird sofort gesetzt.</div>
+
+                <form id="registerForm" class="row g-2">
+                    <div class="col-12">
+                        <label class="form-label small-muted mb-1">Username (für Leaderboard)</label>
+                        <input class="form-control" id="regUsername" maxlength="20" placeholder="z. B. PokerAlex" required>
+                        <div class="small-muted mt-1">3–20 Zeichen, nur Buchstaben/Zahlen/_. Muss eindeutig sein.</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small-muted mb-1">E-Mail</label>
+                        <input class="form-control" type="email" id="regEmail" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small-muted mb-1">Passwort</label>
+                        <input class="form-control" type="password" id="regPassword" minlength="6" required>
+                    </div>
+                    <div class="col-12 d-grid mt-2">
+                        <button class="btn btn-success btn-lg" type="submit">Account erstellen</button>
+                    </div>
+                </form>
+
+                <div class="small-muted mt-3">
+                    Hinweis: Google-Login erfordert beim ersten Login ebenfalls einen Username.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP AREA -->
+    <div id="appArea" class="d-none">
+
+        <!-- Header / KPIs -->
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-lg-8">
+                <div class="card p-3 p-md-4 h-100">
+                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                        <div>
+                            <h1 class="h3 mb-1" style="color: #fff">Meine Einträge</h1>
+                            <div class="small-muted" id="whoAmI"></div>
+                        </div>
+                        <div class="text-end">
+                            <div class="small-muted">Mein Gesamt (EUR)</div>
+                            <div class="display-6 fw-semibold" id="kpiTotal">0,00 €</div>
+                        </div>
+                    </div>
+
+                    <hr class="border border-light border-opacity-10 my-3">
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <div class="small-muted">Turnier (EUR)</div>
+                            <div class="h4 mb-0" style="color: #fff" id="kpiTournament">0,00 €</div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="small-muted">Cashgame (EUR)</div>
+                            <div class="h4 mb-0" style="color: #fff" id="kpiCashgame">0,00 €</div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="small-muted">Einträge</div>
+                            <div class="h4 mb-0" style="color: #fff" id="kpiEntries">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Entry Form -->
+            <div class="col-12 col-lg-4">
+                <div class="card p-3 p-md-4 h-100">
+                    <h2 class="h5 mb-3" style="color: #fff;">Eintrag erfassen</h2>
+
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label small-muted mb-1">Datum</label>
+                            <input class="form-control" type="date" id="entryDate" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small-muted mb-1">Typ</label>
+                            <select class="form-select" id="entryType">
+                                <option value="tournament">Pokerturnier</option>
+                                <option value="cashgame">Pokercashgame</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small-muted mb-1">Betrag (Gewinn + / Verlust −)</label>
+                            <input class="form-control" type="number" id="entryAmount" step="0.01" placeholder="z. B. 25 oder -10" required>
+                        </div>
+
+
+                        <div class="col-12">
+                            <label class="form-label small-muted mb-1">Notiz</label>
+                            <input class="form-control" id="entryNote" maxlength="80" placeholder="z. B. Buy-in 50€, Rebuy …">
+                        </div>
+
+                        <div class="col-12 d-grid mt-2">
+                            <button class="btn btn-primary btn-lg" id="btnAddEntry">Eintrag speichern</button>
+                        </div>
+
+                        <div class="small text-danger mt-2" id="entryMsg"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart + My table -->
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-lg-6">
+                <div class="card p-3 p-md-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                        <div>
+                            <h2 class="h5 mb-0">Mein Gewinn über Zeit</h2>
+                            <div class="small-muted">Kumuliert nach Datum (EUR).</div>
+                        </div>
+                    </div>
+                    <canvas id="profitChart"></canvas>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <div class="card p-3 p-md-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                        <div>
+                            <h2 class="h5 mb-0" style="color: #fff;">Meine Tabelle</h2>
+                            <div class="small-muted">Nur deine Einträge (privat).</div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                            <tr>
+                                <th>Datum</th>
+                                <th>Typ</th>
+                                <th class="text-end">Betrag</th>
+                                <th>Notiz</th>
+                                <th class="text-end">Aktion</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tbodyMine"></tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="card p-3 p-md-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h2 class="h5 mb-0" style="color: #fff;">Leaderboard (Gesamt, EUR)</h2>
+                            <div class="small-muted">Öffentlich lesbar, Username wird angezeigt.</div>
+                        </div>
+                        <span class="badge badge-soft">Top 50</span>
+                    </div>
+
+                    <hr class="border border-light border-opacity-10 my-3">
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Username</th>
+                                <th class="text-end">Gesamt (EUR)</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tbodyLeaderboard"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="small-muted mt-2" >
+                        Hinweis: Für ein vollständig “faires” Leaderboard empfiehlt sich eine serverseitige Berechnung (Cloud Functions). Ohne Backend ist es eine Komfortfunktion.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- USERNAME MODAL (First Google login) -->
+<div class="modal fade" id="usernameModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-light">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Username festlegen</h5>
+            </div>
+            <div class="modal-body">
+                <p class="small-muted mb-2">
+                    Du meldest dich zum ersten Mal mit Google an. Bitte wähle einen <strong>eindeutigen Username</strong>.
+                    Der Google-Standardname wird nicht verwendet.
+                </p>
+                <label class="form-label small-muted mb-1">Username</label>
+                <input class="form-control" id="usernameInput" maxlength="20" placeholder="z. B. PokerAlex" autocomplete="off">
+                <div class="small-muted mt-2">3–20 Zeichen, nur Buchstaben/Zahlen/_</div>
+                <div class="small text-danger mt-2" id="usernameError"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-primary" id="saveUsernameBtn">Speichern</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS (bundle includes Modal) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script type="module">
+    // ---------------------------
+    // Firebase imports (modular SDK via CDN)
+    // ---------------------------
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import {
+        getAuth, onAuthStateChanged, signOut,
+        signInWithEmailAndPassword, createUserWithEmailAndPassword,
+        GoogleAuthProvider, signInWithPopup
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import {
+        getFirestore, doc, setDoc, getDoc,
+        collection, addDoc, deleteDoc,
+        query, where, orderBy, onSnapshot, getDocs,
+        serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+    // ---------------------------
+    // 1) Firebase Config (HIER eintragen)
+    // ---------------------------
+    const firebaseConfig = {
+        apiKey: "AIzaSyASN7beVlrbMtUwMr4BKfSx1EmUQZJAfNk",
+        authDomain: "zentrale-ee675.firebaseapp.com",
+        projectId: "zentrale-ee675",
+        storageBucket: "zentrale-ee675.firebasestorage.app",
+        messagingSenderId: "1091342474994",
+        appId: "1:1091342474994:web:29ff79685bbd4e5077fa6b",
+        measurementId: "G-S805TDBQCQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ---------------------------
+    // DOM refs
+    // ---------------------------
+    const authArea = document.getElementById("authArea");
+    const appArea = document.getElementById("appArea");
+    const authStatus = document.getElementById("authStatus");
+    const btnLogout = document.getElementById("btnLogout");
+    const authMsg = document.getElementById("authMsg");
+
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const btnGoogle = document.getElementById("btnGoogle");
+
+    const whoAmI = document.getElementById("whoAmI");
+
+    const entryDate = document.getElementById("entryDate");
+    const entryType = document.getElementById("entryType");
+    const entryAmount = document.getElementById("entryAmount");
+    const entryCurrency = document.getElementById("entryCurrency");
+    const entryNote = document.getElementById("entryNote");
+    const btnAddEntry = document.getElementById("btnAddEntry");
+    const entryMsg = document.getElementById("entryMsg");
+
+    const kpiTotal = document.getElementById("kpiTotal");
+    const kpiTournament = document.getElementById("kpiTournament");
+    const kpiCashgame = document.getElementById("kpiCashgame");
+    const kpiEntries = document.getElementById("kpiEntries");
+
+    const tbodyMine = document.getElementById("tbodyMine");
+    const tbodyLeaderboard = document.getElementById("tbodyLeaderboard");
+
+    const usernameModalEl = document.getElementById("usernameModal");
+    const usernameInput = document.getElementById("usernameInput");
+    const usernameError = document.getElementById("usernameError");
+    const saveUsernameBtn = document.getElementById("saveUsernameBtn");
+
+    // ---------------------------
+    // Helpers
+    // ---------------------------
+    const fmt = new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    function formatEUR(amount){ return `${fmt.format(amount)} €`; }
+    function amountClass(amount){
+        if(amount > 0) return "amount-pos";
+        if(amount < 0) return "amount-neg";
+        return "amount-zero";
+    }
+    function typeLabel(t){ return t === "tournament" ? "Pokerturnier" : "Pokercashgame"; }
+    function todayISO(){ return new Date().toISOString().slice(0,10); }
+    entryDate.value = todayISO();
+
+    function escapeHtml(str){
+        return (str ?? "").toString()
+            .replaceAll("&","&amp;")
+            .replaceAll("<","&lt;")
+            .replaceAll(">","&gt;")
+            .replaceAll('"',"&quot;")
+            .replaceAll("'","&#039;");
+    }
+
+    // Username rules: 3–20, letters/digits/underscore
+    function isValidUsername(u){
+        return /^[a-zA-Z0-9_]{3,20}$/.test(u);
+    }
+
+    // ---------------------------
+    // State / subscriptions
+    // ---------------------------
+    let currentUser = null;
+    let unsubEntries = null;
+    let unsubLeaderboard = null;
+    let chart = null;
+
+    // For first-time Google login flow
+    let pendingGoogleUser = null;
+    const usernameModal = new window.bootstrap.Modal(usernameModalEl);
+
+    function setAuthUI(isLoggedIn){
+        authArea.classList.toggle("d-none", isLoggedIn);
+        appArea.classList.toggle("d-none", !isLoggedIn);
+        btnLogout.classList.toggle("d-none", !isLoggedIn);
+        authStatus.textContent = isLoggedIn ? "Eingeloggt" : "Nicht eingeloggt";
+    }
+
+    // ---------------------------
+    // Firestore: user doc + username handling
+    // ---------------------------
+    async function userDocRef(uid){ return doc(db, "users", uid); }
+
+    async function ensureUserDocExists(uid){
+        const ref = await userDocRef(uid);
+        const snap = await getDoc(ref);
+        if(!snap.exists()){
+            await setDoc(ref, {
+                username: null,
+                totalEUR: 0,
+                tournamentTotalEUR: 0,
+                cashgameTotalEUR: 0,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            }, { merge: true });
+        }
+    }
+
+    async function getUserDoc(uid){
+        const ref = await userDocRef(uid);
+        const snap = await getDoc(ref);
+        return snap.exists() ? snap.data() : null;
+    }
+
+    async function isUsernameTaken(username){
+        const q = query(collection(db, "users"), where("username", "==", username));
+        const snap = await getDocs(q);
+        return !snap.empty;
+    }
+
+    async function setUsernameForUser(uid, username){
+        const ref = await userDocRef(uid);
+        await setDoc(ref, {
+            username,
+            updatedAt: serverTimestamp()
+        }, { merge: true });
+    }
+
+    // ---------------------------
+    // Auth: Email/password
+    // ---------------------------
+    loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        authMsg.textContent = "";
+
+        const email = document.getElementById("loginEmail").value.trim();
+        const pw = document.getElementById("loginPassword").value;
+
+        try{
+            await signInWithEmailAndPassword(auth, email, pw);
+        }catch(err){
+            authMsg.textContent = err?.message || "Login fehlgeschlagen.";
+        }
+    });
+
+    registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        authMsg.textContent = "";
+
+        const username = document.getElementById("regUsername").value.trim();
+        const email = document.getElementById("regEmail").value.trim();
+        const pw = document.getElementById("regPassword").value;
+
+        if(!isValidUsername(username)){
+            authMsg.textContent = "Username ungültig (3–20 Zeichen, nur Buchstaben/Zahlen/_).";
+            return;
+        }
+
+        try{
+            if(await isUsernameTaken(username)){
+                authMsg.textContent = "Username ist bereits vergeben.";
+                return;
+            }
+
+            const cred = await createUserWithEmailAndPassword(auth, email, pw);
+
+            await ensureUserDocExists(cred.user.uid);
+            await setDoc(doc(db, "users", cred.user.uid), {
+                username,
+                totalEUR: 0,
+                tournamentTotalEUR: 0,
+                cashgameTotalEUR: 0,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            }, { merge: true });
+
+        }catch(err){
+            authMsg.textContent = err?.message || "Registrierung fehlgeschlagen.";
+        }
+    });
+
+    // ---------------------------
+    // Auth: Google + "first login requires username"
+    // ---------------------------
+    btnGoogle.addEventListener("click", async () => {
+        authMsg.textContent = "";
+        try{
+            const provider = new GoogleAuthProvider();
+            const cred = await signInWithPopup(auth, provider);
+
+            // Ensure user doc exists, then enforce username
+            await ensureUserDocExists(cred.user.uid);
+            const udoc = await getUserDoc(cred.user.uid);
+
+            if(!udoc || !udoc.username){
+                pendingGoogleUser = cred.user;
+                usernameInput.value = "";
+                usernameError.textContent = "";
+                usernameModal.show();
+            }
+        }catch(err){
+            authMsg.textContent = err?.message || "Google Login fehlgeschlagen.";
+        }
+    });
+
+    saveUsernameBtn.addEventListener("click", async () => {
+        usernameError.textContent = "";
+
+        const username = usernameInput.value.trim();
+
+        if(!pendingGoogleUser){
+            usernameError.textContent = "Interner Zustand ungültig. Bitte erneut einloggen.";
+            return;
+        }
+
+        if(!isValidUsername(username)){
+            usernameError.textContent = "Ungültig: 3–20 Zeichen, nur Buchstaben/Zahlen/_";
+            return;
+        }
+
+        try{
+            if(await isUsernameTaken(username)){
+                usernameError.textContent = "Username ist bereits vergeben.";
+                return;
+            }
+
+            await setUsernameForUser(pendingGoogleUser.uid, username);
+            pendingGoogleUser = null;
+            usernameModal.hide();
+        }catch(err){
+            usernameError.textContent = err?.message || "Speichern fehlgeschlagen.";
+        }
+    });
+
+    // Logout
+    btnLogout.addEventListener("click", async () => {
+        await signOut(auth);
+    });
+
+    // ---------------------------
+    // Entries: add/delete + recompute EUR totals client-side
+    // ---------------------------
+    async function addEntry(uid, entry){
+        const ref = collection(db, "users", uid, "entries");
+        await addDoc(ref, {
+            ...entry,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+    }
+
+    async function deleteEntry(uid, entryId){
+        await deleteDoc(doc(db, "users", uid, "entries", entryId));
+    }
+
+    async function recomputeAndWriteTotalsEUR(uid){
+        const entriesSnap = await getDocs(collection(db, "users", uid, "entries"));
+        let total=0, t=0, c=0, count=0;
+
+        entriesSnap.forEach(d => {
+            const e = d.data();
+            if(e.currency !== "EUR") return;
+            const amt = Number(e.amount || 0);
+            total += amt;
+            if(e.type === "tournament") t += amt;
+            if(e.type === "cashgame") c += amt;
+            count++;
+        });
+
+        await setDoc(doc(db, "users", uid), {
+            totalEUR: total,
+            tournamentTotalEUR: t,
+            cashgameTotalEUR: c,
+            entriesCountEUR: count,
+            updatedAt: serverTimestamp()
+        }, { merge: true });
+    }
+
+    btnAddEntry.addEventListener("click", async () => {
+        entryMsg.textContent = "";
+        if(!currentUser) return;
+
+        const entry = {
+            date: entryDate.value,
+            type: entryType.value,
+            amount: Math.round(Number(entryAmount.value) * 100) / 100,
+            currency: "EUR",
+            note: (entryNote.value || "").trim()
+        };
+
+        if(!entry.date || !entry.type || Number.isNaN(entry.amount)){
+            entryMsg.textContent = "Bitte alle Pflichtfelder korrekt ausfüllen.";
+            return;
+        }
+
+        try{
+            await addEntry(currentUser.uid, entry);
+
+            // Reset inputs
+            entryAmount.value = "";
+            entryNote.value = "";
+
+            // Keep leaderboard values consistent (EUR only)
+            await recomputeAndWriteTotalsEUR(currentUser.uid);
+        }catch(err){
+            entryMsg.textContent = err?.message || "Speichern fehlgeschlagen.";
+        }
+    });
+
+    tbodyMine.addEventListener("click", async (e) => {
+        const btn = e.target.closest("button[data-del]");
+        if(!btn || !currentUser) return;
+        const id = btn.getAttribute("data-del");
+        if(!id) return;
+
+        if(!confirm("Eintrag löschen?")) return;
+
+        try{
+            await deleteEntry(currentUser.uid, id);
+            await recomputeAndWriteTotalsEUR(currentUser.uid);
+        }catch(err){
+            alert(err?.message || "Löschen fehlgeschlagen.");
+        }
+    });
+
+    // ---------------------------
+    // Rendering: My table, KPIs, chart, leaderboard
+    // ---------------------------
+    function renderMyTable(entries){
+        const rows = entries
+            .slice()
+            .sort((a,b)=> (b.date||"").localeCompare(a.date||""))
+            .map(e => `
+          <tr>
+            <td>${escapeHtml(e.date||"")}</td>
+            <td><span class="badge badge-soft">${escapeHtml(typeLabel(e.type))}</span></td>
+            <td class="text-end ${amountClass(Number(e.amount||0))}">${escapeHtml(e.currency || "")} ${fmt.format(Number(e.amount||0))}</td>
+            <td class="small-muted">${escapeHtml(e.note||"")}</td>
+            <td class="text-end">
+              <button class="btn btn-sm btn-outline-danger" data-del="${escapeHtml(e.id)}">Löschen</button>
+            </td>
+          </tr>
+        `).join("");
+
+        tbodyMine.innerHTML = rows || `<tr><td colspan="5" class="small-muted">Noch keine Einträge.</td></tr>`;
+    }
+
+    function buildChartEUR(entries){
+        const eur = entries
+            .filter(e => e.currency === "EUR")
+            .slice()
+            .sort((a,b)=> (a.date||"").localeCompare(b.date||""));
+
+        const byDate = new Map();
+        for(const e of eur){
+            byDate.set(e.date, (byDate.get(e.date) || 0) + Number(e.amount || 0));
+        }
+
+        const labels = Array.from(byDate.keys()).sort();
+        let running = 0;
+        const cumulative = labels.map(d => (running += byDate.get(d)));
+
+        const ctx = document.getElementById("profitChart");
+        if(chart) chart.destroy();
+        chart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels,
+                datasets: [{
+                    label: "Kumuliert (EUR)",
+                    data: cumulative,
+                    tension: 0.25
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: "#e9eef5" } }
+                },
+                scales: {
+                    x: { ticks: { color: "rgba(233,238,245,0.8)" }, grid: { color: "rgba(255,255,255,0.08)" } },
+                    y: { ticks: { color: "rgba(233,238,245,0.8)" }, grid: { color: "rgba(255,255,255,0.08)" } }
+                }
+            }
+        });
+    }
+
+    function setKPIValues(total, t, c, count){
+        kpiTotal.textContent = formatEUR(total);
+        kpiTournament.textContent = formatEUR(t);
+        kpiCashgame.textContent = formatEUR(c);
+        kpiEntries.textContent = String(count);
+
+        kpiTotal.className = "display-6 fw-semibold " + amountClass(total);
+    }
+
+    function listenLeaderboard(){
+        const qUsers = query(collection(db, "users"), orderBy("totalEUR", "desc"));
+        return onSnapshot(qUsers, (snap) => {
+            let rank = 0;
+            const rows = snap.docs.slice(0, 50).map(d => {
+                const u = d.data();
+                if(!u.username) return ""; // nur User mit gesetztem Username
+                rank++;
+                const total = Number(u.totalEUR || 0);
+                return `
+            <tr>
+              <td>${rank}</td>
+              <td class="fw-semibold">${escapeHtml(u.username)}</td>
+              <td class="text-end ${amountClass(total)}">${formatEUR(total)}</td>
+            </tr>
+          `;
+            }).join("");
+
+            tbodyLeaderboard.innerHTML = rows.trim()
+                ? rows
+                : `<tr><td colspan="3" class="small-muted">Noch keine Daten.</td></tr>`;
+        });
+    }
+
+    // ---------------------------
+    // Auth state: enforce username on every login (Google + others)
+    // ---------------------------
+    onAuthStateChanged(auth, async (user) => {
+        currentUser = user || null;
+
+        // cleanup
+        if(unsubEntries){ unsubEntries(); unsubEntries = null; }
+        if(unsubLeaderboard){ unsubLeaderboard(); unsubLeaderboard = null; }
+
+        if(!user){
+            setAuthUI(false);
+            whoAmI.textContent = "";
+            authMsg.textContent = "";
+            tbodyMine.innerHTML = "";
+            tbodyLeaderboard.innerHTML = "";
+            if(chart){ chart.destroy(); chart = null; }
+            return;
+        }
+
+        await ensureUserDocExists(user.uid);
+        const udoc = await getUserDoc(user.uid);
+
+        // Enforce username (for Google first login and also for any account that lacks it)
+        if(!udoc || !udoc.username){
+            pendingGoogleUser = user;
+            usernameInput.value = "";
+            usernameError.textContent = "";
+            // show modal immediately; user cannot proceed without username
+            setAuthUI(true);
+            whoAmI.textContent = "Bitte Username festlegen, um fortzufahren.";
+            usernameModal.show();
+            return;
+        }
+
+        // Normal app
+        setAuthUI(true);
+        whoAmI.textContent = `Angemeldet als: ${udoc.username} (nur du kannst deine Daten ändern)`;
+
+        // My entries listener
+        const qMine = query(collection(db, "users", user.uid, "entries"), orderBy("date", "asc"));
+        unsubEntries = onSnapshot(qMine, async (snap) => {
+            const entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            renderMyTable(entries);
+            buildChartEUR(entries);
+
+            // KPIs from user doc (fast) – fallback: recompute if missing
+            const fresh = await getUserDoc(user.uid);
+            const total = Number(fresh?.totalEUR || 0);
+            const t = Number(fresh?.tournamentTotalEUR || 0);
+            const c = Number(fresh?.cashgameTotalEUR || 0);
+            const count = Number(fresh?.entriesCountEUR || 0);
+            setKPIValues(total, t, c, count);
+        });
+
+        // Leaderboard listener
+        unsubLeaderboard = listenLeaderboard();
+    });
+</script>
+</body>
+</html>
