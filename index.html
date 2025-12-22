@@ -60,6 +60,12 @@
             background: rgba(12, 16, 22, 0.95);
             border-radius: 18px;
         }
+        .nav-pills .nav-link{
+            border-radius: 999px;
+        }
+        .nav-pills .nav-link.active{
+            background: rgba(13,110,253,0.85);
+        }
     </style>
 </head>
 
@@ -70,7 +76,7 @@
 
         <div class="ms-auto d-flex gap-2 align-items-center">
             <span class="badge badge-soft" id="authStatus">Nicht eingeloggt</span>
-            <button class="btn btn-sm btn-outline-light d-none" id="btnLogout">Logout</button>
+            <button class="btn btn-sm btn-outline-light d-none" id="btnLogout" type="button">Logout</button>
         </div>
     </div>
 </nav>
@@ -101,7 +107,7 @@
                 <hr class="border border-light border-opacity-10 my-3">
 
                 <div class="d-grid">
-                    <button class="btn btn-outline-light" id="btnGoogle">Mit Google einloggen</button>
+                    <button class="btn btn-outline-light" id="btnGoogle" type="button">Mit Google einloggen</button>
                 </div>
 
                 <div class="small text-danger mt-3" id="authMsg"></div>
@@ -142,13 +148,13 @@
     <!-- APP AREA -->
     <div id="appArea" class="d-none">
 
-        <!-- Header / KPIs -->
+        <!-- Header -->
         <div class="row g-3 mb-3">
-            <div class="col-12 col-lg-8">
-                <div class="card p-3 p-md-4 h-100">
+            <div class="col-12">
+                <div class="card p-3 p-md-4">
                     <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
                         <div>
-                            <h1 class="h3 mb-1" style="color: #fff">Meine Einträge</h1>
+                            <h1 class="h3 mb-1" style="color:#fff;">Meine Einträge</h1>
                             <div class="small-muted" id="whoAmI"></div>
                         </div>
                         <div class="text-end">
@@ -159,143 +165,289 @@
 
                     <hr class="border border-light border-opacity-10 my-3">
 
-                    <div class="row g-3">
-                        <div class="col-12 col-md-4">
-                            <div class="small-muted">Turnier (EUR)</div>
-                            <div class="h4 mb-0" style="color: #fff" id="kpiTournament">0,00 €</div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="small-muted">Cashgame (EUR)</div>
-                            <div class="h4 mb-0" style="color: #fff" id="kpiCashgame">0,00 €</div>
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <div class="small-muted">Einträge</div>
-                            <div class="h4 mb-0" style="color: #fff" id="kpiEntries">0</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Entry Form -->
-            <div class="col-12 col-lg-4">
-                <div class="card p-3 p-md-4 h-100">
-                    <h2 class="h5 mb-3" style="color: #fff;">Eintrag erfassen</h2>
-
-                    <div class="row g-2">
-                        <div class="col-12">
-                            <label class="form-label small-muted mb-1">Datum</label>
-                            <input class="form-control" type="date" id="entryDate" required>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label small-muted mb-1">Typ</label>
-                            <select class="form-select" id="entryType">
-                                <option value="tournament">Pokerturnier</option>
-                                <option value="cashgame">Pokercashgame</option>
-                            </select>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label small-muted mb-1">Betrag (Gewinn + / Verlust −)</label>
-                            <input class="form-control" type="number" id="entryAmount" step="0.01" placeholder="z. B. 25 oder -10" required>
-                        </div>
-
-
-                        <div class="col-12">
-                            <label class="form-label small-muted mb-1">Notiz</label>
-                            <input class="form-control" id="entryNote" maxlength="80" placeholder="z. B. Buy-in 50€, Rebuy …">
-                        </div>
-
-                        <div class="col-12 d-grid mt-2">
-                            <button class="btn btn-primary btn-lg" id="btnAddEntry">Eintrag speichern</button>
-                        </div>
-
-                        <div class="small text-danger mt-2" id="entryMsg"></div>
-                    </div>
+                    <ul class="nav nav-pills gap-2" id="mainTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tabCashBtn" data-bs-toggle="pill" data-bs-target="#tabCash"
+                                    type="button" role="tab" aria-controls="tabCash" aria-selected="true">
+                                Cashgame
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tabTourBtn" data-bs-toggle="pill" data-bs-target="#tabTour"
+                                    type="button" role="tab" aria-controls="tabTour" aria-selected="false">
+                                Turnier
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tabLeadBtn" data-bs-toggle="pill" data-bs-target="#tabLead"
+                                    type="button" role="tab" aria-controls="tabLead" aria-selected="false">
+                                Leaderboard
+                            </button>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
 
-        <!-- Chart + My table -->
-        <div class="row g-3 mb-3">
-            <div class="col-12 col-lg-6">
-                <div class="card p-3 p-md-4 h-100">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-                        <div>
-                            <h2 class="h5 mb-0">Mein Gewinn über Zeit</h2>
-                            <div class="small-muted">Kumuliert nach Datum (EUR).</div>
+        <div class="tab-content">
+
+            <!-- CASHGAME TAB -->
+            <div class="tab-pane fade show active" id="tabCash" role="tabpanel" aria-labelledby="tabCashBtn">
+                <div class="row g-3 mb-3">
+                    <!-- KPIs Cash -->
+                    <div class="col-12 col-lg-4">
+                        <div class="card p-3 p-md-4 h-100">
+                            <h2 class="h5 mb-3" style="color:#fff;">Cashgame Stats (EUR)</h2>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="small-muted">Cashgame Gesamt</div>
+                                    <div class="h3 mb-0" id="kpiCashTotal">0,00 €</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="small-muted">Einträge</div>
+                                    <div class="h4 mb-0" id="kpiCashCount">0</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="small-muted">Ø pro Eintrag</div>
+                                    <div class="h4 mb-0" id="kpiCashAvg">0,00 €</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <canvas id="profitChart"></canvas>
+
+                    <!-- Form Cash -->
+                    <div class="col-12 col-lg-4">
+                        <div class="card p-3 p-md-4 h-100">
+                            <h2 class="h5 mb-3" style="color:#fff;">Cashgame Eintrag</h2>
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <label class="form-label small-muted mb-1">Datum</label>
+                                    <input class="form-control" type="date" id="cashDate" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small-muted mb-1">Betrag (Gewinn + / Verlust −)</label>
+                                    <input class="form-control" type="number" id="cashAmount" step="0.01" placeholder="z. B. 25 oder -10" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small-muted mb-1">Notiz</label>
+                                    <input class="form-control" id="cashNote" maxlength="80" placeholder="z. B. 1/2 NLH, Homegame …">
+                                </div>
+                                <div class="col-12 d-grid mt-2">
+                                    <button class="btn btn-primary btn-lg" id="btnAddCash" type="button">Speichern</button>
+                                </div>
+                                <div class="small text-danger mt-2" id="cashMsg"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Cash -->
+                    <div class="col-12 col-lg-4">
+                        <div class="card p-3 p-md-4 h-100">
+                            <h2 class="h5 mb-2" style="color:#fff;">Cashgame Chart</h2>
+                            <div class="small-muted mb-2">Kumuliert nach Datum (EUR).</div>
+                            <canvas id="cashChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cash table -->
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="card p-3 p-md-4">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h2 class="h5 mb-0" style="color:#fff;">Cashgame Tabelle</h2>
+                                    <div class="small-muted">Nur deine Cashgame-Einträge.</div>
+                                </div>
+                                <span class="badge badge-soft">EUR</span>
+                            </div>
+
+                            <hr class="border border-light border-opacity-10 my-3">
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>Datum</th>
+                                        <th class="text-end">Betrag</th>
+                                        <th>Notiz</th>
+                                        <th class="text-end">Aktion</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tbodyCash"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-12 col-lg-6">
-                <div class="card p-3 p-md-4 h-100">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-                        <div>
-                            <h2 class="h5 mb-0" style="color: #fff;">Meine Tabelle</h2>
-                            <div class="small-muted">Nur deine Einträge (privat).</div>
+            <!-- TOURNAMENT TAB -->
+            <div class="tab-pane fade" id="tabTour" role="tabpanel" aria-labelledby="tabTourBtn">
+                <div class="row g-3 mb-3">
+                    <!-- KPIs Tour -->
+                    <div class="col-12 col-lg-4">
+                        <div class="card p-3 p-md-4 h-100">
+                            <h2 class="h5 mb-3" style="color:#fff;">Turnier Stats (EUR)</h2>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="small-muted">Turnier Gesamt</div>
+                                    <div class="h3 mb-0" id="kpiTourTotal">0,00 €</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="small-muted">Einträge</div>
+                                    <div class="h4 mb-0" id="kpiTourCount">0</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="small-muted">Ø pro Eintrag</div>
+                                    <div class="h4 mb-0" id="kpiTourAvg">0,00 €</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                            <tr>
-                                <th>Datum</th>
-                                <th>Typ</th>
-                                <th class="text-end">Betrag</th>
-                                <th>Notiz</th>
-                                <th class="text-end">Aktion</th>
-                            </tr>
-                            </thead>
-                            <tbody id="tbodyMine"></tbody>
-                        </table>
+                    <!-- Form Tour -->
+                    <div class="col-12 col-lg-4">
+                        <div class="card p-3 p-md-4 h-100">
+                            <h2 class="h5 mb-3" style="color:#fff;">Turnier Eintrag</h2>
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <label class="form-label small-muted mb-1">Datum</label>
+                                    <input class="form-control" type="date" id="tourDate" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small-muted mb-1">Betrag (Gewinn + / Verlust −)</label>
+                                    <input class="form-control" type="number" id="tourAmount" step="0.01" placeholder="z. B. 80 oder -50" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small-muted mb-1">Notiz</label>
+                                    <input class="form-control" id="tourNote" maxlength="80" placeholder="z. B. Buy-in 50€, Rebuy …">
+                                </div>
+                                <div class="col-12 d-grid mt-2">
+                                    <button class="btn btn-primary btn-lg" id="btnAddTour" type="button">Speichern</button>
+                                </div>
+                                <div class="small text-danger mt-2" id="tourMsg"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Tour -->
+                    <div class="col-12 col-lg-4">
+                        <div class="card p-3 p-md-4 h-100">
+                            <h2 class="h5 mb-2" style="color:#fff;">Turnier Chart</h2>
+                            <div class="small-muted mb-2">Kumuliert nach Datum (EUR).</div>
+                            <canvas id="tourChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tour table -->
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="card p-3 p-md-4">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h2 class="h5 mb-0" style="color:#fff;">Turnier Tabelle</h2>
+                                    <div class="small-muted">Nur deine Turnier-Einträge.</div>
+                                </div>
+                                <span class="badge badge-soft">EUR</span>
+                            </div>
+
+                            <hr class="border border-light border-opacity-10 my-3">
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>Datum</th>
+                                        <th class="text-end">Betrag</th>
+                                        <th>Notiz</th>
+                                        <th class="text-end">Aktion</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tbodyTour"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LEADERBOARD TAB (Cash + Turnier) -->
+            <div class="tab-pane fade" id="tabLead" role="tabpanel" aria-labelledby="tabLeadBtn">
+                <div class="row g-3">
+
+                    <!-- Cashgame Leaderboard -->
+                    <div class="col-12 col-lg-6">
+                        <div class="card p-3 p-md-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h2 class="h5 mb-0" style="color:#fff;">Leaderboard – Cashgame (EUR)</h2>
+                                    <div class="small-muted">Sortiert nach Cashgame-Gesamt.</div>
+                                </div>
+                                <span class="badge badge-soft">Top 50</span>
+                            </div>
+
+                            <hr class="border border-light border-opacity-10 my-3">
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Username</th>
+                                        <th class="text-end">Cashgame (EUR)</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tbodyLeaderboardCash"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tournament Leaderboard -->
+                    <div class="col-12 col-lg-6">
+                        <div class="card p-3 p-md-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h2 class="h5 mb-0" style="color:#fff;">Leaderboard – Turnier (EUR)</h2>
+                                    <div class="small-muted">Sortiert nach Turnier-Gesamt.</div>
+                                </div>
+                                <span class="badge badge-soft">Top 50</span>
+                            </div>
+
+                            <hr class="border border-light border-opacity-10 my-3">
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Username</th>
+                                        <th class="text-end">Turnier (EUR)</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tbodyLeaderboardTour"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="small-muted">
+                            Hinweis: Ohne serverseitige Absicherung bleibt das Leaderboard eine Komfortfunktion.
+                        </div>
                     </div>
 
                 </div>
             </div>
-        </div>
 
-        <!-- Leaderboard -->
-        <div class="row g-3">
-            <div class="col-12">
-                <div class="card p-3 p-md-4">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div>
-                            <h2 class="h5 mb-0" style="color: #fff;">Leaderboard (Gesamt, EUR)</h2>
-                            <div class="small-muted">Öffentlich lesbar, Username wird angezeigt.</div>
-                        </div>
-                        <span class="badge badge-soft">Top 50</span>
-                    </div>
+        </div><!-- /tab-content -->
+    </div><!-- /appArea -->
 
-                    <hr class="border border-light border-opacity-10 my-3">
-
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Username</th>
-                                <th class="text-end">Gesamt (EUR)</th>
-                            </tr>
-                            </thead>
-                            <tbody id="tbodyLeaderboard"></tbody>
-                        </table>
-                    </div>
-
-                    <div class="small-muted mt-2" >
-                        Hinweis: Für ein vollständig “faires” Leaderboard empfiehlt sich eine serverseitige Berechnung (Cloud Functions). Ohne Backend ist es eine Komfortfunktion.
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
 </main>
 
-<!-- USERNAME MODAL (First Google login) -->
+<!-- USERNAME MODAL -->
 <div class="modal fade" id="usernameModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content text-light">
@@ -304,22 +456,20 @@
             </div>
             <div class="modal-body">
                 <p class="small-muted mb-2">
-                    Du meldest dich zum ersten Mal mit Google an. Bitte wähle einen <strong>eindeutigen Username</strong>.
-                    Der Google-Standardname wird nicht verwendet.
+                    Bitte wähle einen <strong>eindeutigen Username</strong> (3–20 Zeichen, nur Buchstaben/Zahlen/_).
                 </p>
                 <label class="form-label small-muted mb-1">Username</label>
                 <input class="form-control" id="usernameInput" maxlength="20" placeholder="z. B. PokerAlex" autocomplete="off">
-                <div class="small-muted mt-2">3–20 Zeichen, nur Buchstaben/Zahlen/_</div>
                 <div class="small text-danger mt-2" id="usernameError"></div>
             </div>
             <div class="modal-footer border-0">
-                <button class="btn btn-primary" id="saveUsernameBtn">Speichern</button>
+                <button class="btn btn-primary" id="saveUsernameBtn" type="button">Speichern</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Bootstrap JS (bundle includes Modal) -->
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script type="module">
@@ -340,7 +490,7 @@
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
     // ---------------------------
-    // 1) Firebase Config (HIER eintragen)
+    // 1) Firebase Config
     // ---------------------------
     const firebaseConfig = {
         apiKey: "AIzaSyASN7beVlrbMtUwMr4BKfSx1EmUQZJAfNk",
@@ -370,67 +520,66 @@
     const btnGoogle = document.getElementById("btnGoogle");
 
     const whoAmI = document.getElementById("whoAmI");
-
-    const entryDate = document.getElementById("entryDate");
-    const entryType = document.getElementById("entryType");
-    const entryAmount = document.getElementById("entryAmount");
-    const entryCurrency = document.getElementById("entryCurrency");
-    const entryNote = document.getElementById("entryNote");
-    const btnAddEntry = document.getElementById("btnAddEntry");
-    const entryMsg = document.getElementById("entryMsg");
-
     const kpiTotal = document.getElementById("kpiTotal");
-    const kpiTournament = document.getElementById("kpiTournament");
-    const kpiCashgame = document.getElementById("kpiCashgame");
-    const kpiEntries = document.getElementById("kpiEntries");
 
-    const tbodyMine = document.getElementById("tbodyMine");
-    const tbodyLeaderboard = document.getElementById("tbodyLeaderboard");
+    // Cash UI
+    const cashDate = document.getElementById("cashDate");
+    const cashAmount = document.getElementById("cashAmount");
+    const cashNote = document.getElementById("cashNote");
+    const btnAddCash = document.getElementById("btnAddCash");
+    const cashMsg = document.getElementById("cashMsg");
+    const tbodyCash = document.getElementById("tbodyCash");
+    const kpiCashTotal = document.getElementById("kpiCashTotal");
+    const kpiCashCount = document.getElementById("kpiCashCount");
+    const kpiCashAvg = document.getElementById("kpiCashAvg");
 
+    // Tournament UI
+    const tourDate = document.getElementById("tourDate");
+    const tourAmount = document.getElementById("tourAmount");
+    const tourNote = document.getElementById("tourNote");
+    const btnAddTour = document.getElementById("btnAddTour");
+    const tourMsg = document.getElementById("tourMsg");
+    const tbodyTour = document.getElementById("tbodyTour");
+    const kpiTourTotal = document.getElementById("kpiTourTotal");
+    const kpiTourCount = document.getElementById("kpiTourCount");
+    const kpiTourAvg = document.getElementById("kpiTourAvg");
+
+    // Leaderboards
+    const tbodyLeaderboardCash = document.getElementById("tbodyLeaderboardCash");
+    const tbodyLeaderboardTour = document.getElementById("tbodyLeaderboardTour");
+
+    // Username modal
     const usernameModalEl = document.getElementById("usernameModal");
     const usernameInput = document.getElementById("usernameInput");
     const usernameError = document.getElementById("usernameError");
     const saveUsernameBtn = document.getElementById("saveUsernameBtn");
+    const usernameModal = new window.bootstrap.Modal(usernameModalEl);
 
     // ---------------------------
     // Helpers
     // ---------------------------
     const fmt = new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    function formatEUR(amount){ return `${fmt.format(amount)} €`; }
+    const formatEUR = (amount) => `${fmt.format(amount)} €`;
+
     function amountClass(amount){
         if(amount > 0) return "amount-pos";
         if(amount < 0) return "amount-neg";
         return "amount-zero";
     }
-    function typeLabel(t){ return t === "tournament" ? "Pokerturnier" : "Pokercashgame"; }
+
     function todayISO(){ return new Date().toISOString().slice(0,10); }
-    entryDate.value = todayISO();
+    cashDate.value = todayISO();
+    tourDate.value = todayISO();
 
     function escapeHtml(str){
         return (str ?? "").toString()
-            .replaceAll("&","&amp;")
-            .replaceAll("<","&lt;")
-            .replaceAll(">","&gt;")
-            .replaceAll('"',"&quot;")
-            .replaceAll("'","&#039;");
+            .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+            .replaceAll('"',"&quot;").replaceAll("'","&#039;");
     }
 
-    // Username rules: 3–20, letters/digits/underscore
     function isValidUsername(u){
         return /^[a-zA-Z0-9_]{3,20}$/.test(u);
     }
-
-    // ---------------------------
-    // State / subscriptions
-    // ---------------------------
-    let currentUser = null;
-    let unsubEntries = null;
-    let unsubLeaderboard = null;
-    let chart = null;
-
-    // For first-time Google login flow
-    let pendingGoogleUser = null;
-    const usernameModal = new window.bootstrap.Modal(usernameModalEl);
 
     function setAuthUI(isLoggedIn){
         authArea.classList.toggle("d-none", isLoggedIn);
@@ -442,10 +591,8 @@
     // ---------------------------
     // Firestore: user doc + username handling
     // ---------------------------
-    async function userDocRef(uid){ return doc(db, "users", uid); }
-
     async function ensureUserDocExists(uid){
-        const ref = await userDocRef(uid);
+        const ref = doc(db, "users", uid);
         const snap = await getDoc(ref);
         if(!snap.exists()){
             await setDoc(ref, {
@@ -453,6 +600,7 @@
                 totalEUR: 0,
                 tournamentTotalEUR: 0,
                 cashgameTotalEUR: 0,
+                entriesCountEUR: 0,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
             }, { merge: true });
@@ -460,23 +608,19 @@
     }
 
     async function getUserDoc(uid){
-        const ref = await userDocRef(uid);
+        const ref = doc(db, "users", uid);
         const snap = await getDoc(ref);
         return snap.exists() ? snap.data() : null;
     }
 
     async function isUsernameTaken(username){
-        const q = query(collection(db, "users"), where("username", "==", username));
-        const snap = await getDocs(q);
+        const qU = query(collection(db, "users"), where("username", "==", username));
+        const snap = await getDocs(qU);
         return !snap.empty;
     }
 
     async function setUsernameForUser(uid, username){
-        const ref = await userDocRef(uid);
-        await setDoc(ref, {
-            username,
-            updatedAt: serverTimestamp()
-        }, { merge: true });
+        await setDoc(doc(db, "users", uid), { username, updatedAt: serverTimestamp() }, { merge: true });
     }
 
     // ---------------------------
@@ -516,13 +660,14 @@
             }
 
             const cred = await createUserWithEmailAndPassword(auth, email, pw);
-
             await ensureUserDocExists(cred.user.uid);
+
             await setDoc(doc(db, "users", cred.user.uid), {
                 username,
                 totalEUR: 0,
                 tournamentTotalEUR: 0,
                 cashgameTotalEUR: 0,
+                entriesCountEUR: 0,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
             }, { merge: true });
@@ -533,15 +678,16 @@
     });
 
     // ---------------------------
-    // Auth: Google + "first login requires username"
+    // Auth: Google + username enforcement
     // ---------------------------
+    let pendingGoogleUser = null;
+
     btnGoogle.addEventListener("click", async () => {
         authMsg.textContent = "";
         try{
             const provider = new GoogleAuthProvider();
             const cred = await signInWithPopup(auth, provider);
 
-            // Ensure user doc exists, then enforce username
             await ensureUserDocExists(cred.user.uid);
             const udoc = await getUserDoc(cred.user.uid);
 
@@ -558,14 +704,12 @@
 
     saveUsernameBtn.addEventListener("click", async () => {
         usernameError.textContent = "";
-
         const username = usernameInput.value.trim();
 
         if(!pendingGoogleUser){
             usernameError.textContent = "Interner Zustand ungültig. Bitte erneut einloggen.";
             return;
         }
-
         if(!isValidUsername(username)){
             usernameError.textContent = "Ungültig: 3–20 Zeichen, nur Buchstaben/Zahlen/_";
             return;
@@ -585,21 +729,16 @@
         }
     });
 
-    // Logout
     btnLogout.addEventListener("click", async () => {
         await signOut(auth);
     });
 
     // ---------------------------
-    // Entries: add/delete + recompute EUR totals client-side
+    // Entries: add/delete + recompute totals (EUR)
     // ---------------------------
     async function addEntry(uid, entry){
         const ref = collection(db, "users", uid, "entries");
-        await addDoc(ref, {
-            ...entry,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-        });
+        await addDoc(ref, { ...entry, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
     }
 
     async function deleteEntry(uid, entryId){
@@ -629,40 +768,170 @@
         }, { merge: true });
     }
 
-    btnAddEntry.addEventListener("click", async () => {
-        entryMsg.textContent = "";
+    // Add cash entry
+    btnAddCash.addEventListener("click", async () => {
+        cashMsg.textContent = "";
         if(!currentUser) return;
 
         const entry = {
-            date: entryDate.value,
-            type: entryType.value,
-            amount: Math.round(Number(entryAmount.value) * 100) / 100,
+            date: cashDate.value,
+            type: "cashgame",
+            amount: Math.round(Number(cashAmount.value) * 100) / 100,
             currency: "EUR",
-            note: (entryNote.value || "").trim()
+            note: (cashNote.value || "").trim()
         };
 
-        if(!entry.date || !entry.type || Number.isNaN(entry.amount)){
-            entryMsg.textContent = "Bitte alle Pflichtfelder korrekt ausfüllen.";
+        if(!entry.date || Number.isNaN(entry.amount)){
+            cashMsg.textContent = "Bitte Datum und Betrag korrekt ausfüllen.";
             return;
         }
 
         try{
             await addEntry(currentUser.uid, entry);
-
-            // Reset inputs
-            entryAmount.value = "";
-            entryNote.value = "";
-
-            // Keep leaderboard values consistent (EUR only)
+            cashAmount.value = "";
+            cashNote.value = "";
             await recomputeAndWriteTotalsEUR(currentUser.uid);
         }catch(err){
-            entryMsg.textContent = err?.message || "Speichern fehlgeschlagen.";
+            cashMsg.textContent = err?.message || "Speichern fehlgeschlagen.";
         }
     });
 
-    tbodyMine.addEventListener("click", async (e) => {
+    // Add tournament entry
+    btnAddTour.addEventListener("click", async () => {
+        tourMsg.textContent = "";
+        if(!currentUser) return;
+
+        const entry = {
+            date: tourDate.value,
+            type: "tournament",
+            amount: Math.round(Number(tourAmount.value) * 100) / 100,
+            currency: "EUR",
+            note: (tourNote.value || "").trim()
+        };
+
+        if(!entry.date || Number.isNaN(entry.amount)){
+            tourMsg.textContent = "Bitte Datum und Betrag korrekt ausfüllen.";
+            return;
+        }
+
+        try{
+            await addEntry(currentUser.uid, entry);
+            tourAmount.value = "";
+            tourNote.value = "";
+            await recomputeAndWriteTotalsEUR(currentUser.uid);
+        }catch(err){
+            tourMsg.textContent = err?.message || "Speichern fehlgeschlagen.";
+        }
+    });
+
+    // ---------------------------
+    // Rendering
+    // ---------------------------
+    let currentUser = null;
+    let unsubEntries = null;
+    let unsubLeaderboards = null;
+
+    let cashChart = null;
+    let tourChart = null;
+
+    function buildCumulativeChart(canvasId, entries){
+        const sorted = entries.slice().sort((a,b)=> (a.date||"").localeCompare(b.date||""));
+        const byDate = new Map();
+        for(const e of sorted){
+            byDate.set(e.date, (byDate.get(e.date) || 0) + Number(e.amount || 0));
+        }
+        const labels = Array.from(byDate.keys()).sort();
+        let running = 0;
+        const cumulative = labels.map(d => (running += byDate.get(d)));
+
+        const ctx = document.getElementById(canvasId);
+        return new Chart(ctx, {
+            type: "line",
+            data: { labels, datasets: [{ label: "Kumuliert (EUR)", data: cumulative, tension: 0.25 }] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: "#e9eef5" } } },
+                scales: {
+                    x: { ticks: { color: "rgba(233,238,245,0.8)" }, grid: { color: "rgba(255,255,255,0.08)" } },
+                    y: { ticks: { color: "rgba(233,238,245,0.8)" }, grid: { color: "rgba(255,255,255,0.08)" } }
+                }
+            }
+        });
+    }
+
+    function renderTablesAndStats(allEntries){
+        const eur = allEntries.filter(e => e.currency === "EUR");
+
+        const cash = eur.filter(e => e.type === "cashgame");
+        const tour = eur.filter(e => e.type === "tournament");
+
+        // Overall KPI (header total)
+        const total = eur.reduce((s,e)=> s + Number(e.amount||0), 0);
+        kpiTotal.textContent = formatEUR(total);
+        kpiTotal.className = "display-6 fw-semibold " + amountClass(total);
+
+        // Cash stats
+        const cashTotal = cash.reduce((s,e)=> s + Number(e.amount||0), 0);
+        const cashCount = cash.length;
+        const cashAvg = cashCount ? (cashTotal / cashCount) : 0;
+        kpiCashTotal.textContent = formatEUR(cashTotal);
+        kpiCashTotal.className = "h3 mb-0 " + amountClass(cashTotal);
+        kpiCashCount.textContent = String(cashCount);
+        kpiCashAvg.textContent = formatEUR(cashAvg);
+        kpiCashAvg.className = "h4 mb-0 " + amountClass(cashAvg);
+
+        // Tour stats
+        const tourTotal = tour.reduce((s,e)=> s + Number(e.amount||0), 0);
+        const tourCount = tour.length;
+        const tourAvg = tourCount ? (tourTotal / tourCount) : 0;
+        kpiTourTotal.textContent = formatEUR(tourTotal);
+        kpiTourTotal.className = "h3 mb-0 " + amountClass(tourTotal);
+        kpiTourCount.textContent = String(tourCount);
+        kpiTourAvg.textContent = formatEUR(tourAvg);
+        kpiTourAvg.className = "h4 mb-0 " + amountClass(tourAvg);
+
+        // Cash table
+        tbodyCash.innerHTML = cash
+            .slice().sort((a,b)=> (b.date||"").localeCompare(a.date||""))
+            .map(e => `
+        <tr>
+          <td>${escapeHtml(e.date||"")}</td>
+          <td class="text-end ${amountClass(Number(e.amount||0))}">${formatEUR(Number(e.amount||0))}</td>
+          <td class="small-muted">${escapeHtml(e.note||"")}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-danger" data-del="${escapeHtml(e.id)}">Löschen</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="4" class="small-muted">Noch keine Cashgame-Einträge.</td></tr>`;
+
+        // Tour table
+        tbodyTour.innerHTML = tour
+            .slice().sort((a,b)=> (b.date||"").localeCompare(a.date||""))
+            .map(e => `
+        <tr>
+          <td>${escapeHtml(e.date||"")}</td>
+          <td class="text-end ${amountClass(Number(e.amount||0))}">${formatEUR(Number(e.amount||0))}</td>
+          <td class="small-muted">${escapeHtml(e.note||"")}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-danger" data-del="${escapeHtml(e.id)}">Löschen</button>
+          </td>
+        </tr>
+      `).join("") || `<tr><td colspan="4" class="small-muted">Noch keine Turnier-Einträge.</td></tr>`;
+
+        // Charts
+        if(cashChart){ cashChart.destroy(); cashChart = null; }
+        if(tourChart){ tourChart.destroy(); tourChart = null; }
+
+        cashChart = buildCumulativeChart("cashChart", cash);
+        tourChart = buildCumulativeChart("tourChart", tour);
+    }
+
+    // Delete handler for both tables
+    document.addEventListener("click", async (e) => {
         const btn = e.target.closest("button[data-del]");
         if(!btn || !currentUser) return;
+
         const id = btn.getAttribute("data-del");
         if(!id) return;
 
@@ -676,160 +945,110 @@
         }
     });
 
-    // ---------------------------
-    // Rendering: My table, KPIs, chart, leaderboard
-    // ---------------------------
-    function renderMyTable(entries){
-        const rows = entries
-            .slice()
-            .sort((a,b)=> (b.date||"").localeCompare(a.date||""))
-            .map(e => `
-          <tr>
-            <td>${escapeHtml(e.date||"")}</td>
-            <td><span class="badge badge-soft">${escapeHtml(typeLabel(e.type))}</span></td>
-            <td class="text-end ${amountClass(Number(e.amount||0))}">${escapeHtml(e.currency || "")} ${fmt.format(Number(e.amount||0))}</td>
-            <td class="small-muted">${escapeHtml(e.note||"")}</td>
-            <td class="text-end">
-              <button class="btn btn-sm btn-outline-danger" data-del="${escapeHtml(e.id)}">Löschen</button>
-            </td>
-          </tr>
-        `).join("");
+    function listenLeaderboards(){
+        const qCash = query(collection(db, "users"), orderBy("cashgameTotalEUR", "desc"));
+        const qTour = query(collection(db, "users"), orderBy("tournamentTotalEUR", "desc"));
 
-        tbodyMine.innerHTML = rows || `<tr><td colspan="5" class="small-muted">Noch keine Einträge.</td></tr>`;
-    }
-
-    function buildChartEUR(entries){
-        const eur = entries
-            .filter(e => e.currency === "EUR")
-            .slice()
-            .sort((a,b)=> (a.date||"").localeCompare(b.date||""));
-
-        const byDate = new Map();
-        for(const e of eur){
-            byDate.set(e.date, (byDate.get(e.date) || 0) + Number(e.amount || 0));
-        }
-
-        const labels = Array.from(byDate.keys()).sort();
-        let running = 0;
-        const cumulative = labels.map(d => (running += byDate.get(d)));
-
-        const ctx = document.getElementById("profitChart");
-        if(chart) chart.destroy();
-        chart = new Chart(ctx, {
-            type: "line",
-            data: {
-                labels,
-                datasets: [{
-                    label: "Kumuliert (EUR)",
-                    data: cumulative,
-                    tension: 0.25
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { labels: { color: "#e9eef5" } }
-                },
-                scales: {
-                    x: { ticks: { color: "rgba(233,238,245,0.8)" }, grid: { color: "rgba(255,255,255,0.08)" } },
-                    y: { ticks: { color: "rgba(233,238,245,0.8)" }, grid: { color: "rgba(255,255,255,0.08)" } }
-                }
-            }
-        });
-    }
-
-    function setKPIValues(total, t, c, count){
-        kpiTotal.textContent = formatEUR(total);
-        kpiTournament.textContent = formatEUR(t);
-        kpiCashgame.textContent = formatEUR(c);
-        kpiEntries.textContent = String(count);
-
-        kpiTotal.className = "display-6 fw-semibold " + amountClass(total);
-    }
-
-    function listenLeaderboard(){
-        const qUsers = query(collection(db, "users"), orderBy("totalEUR", "desc"));
-        return onSnapshot(qUsers, (snap) => {
+        const unsubCash = onSnapshot(qCash, (snap) => {
             let rank = 0;
             const rows = snap.docs.slice(0, 50).map(d => {
                 const u = d.data();
-                if(!u.username) return ""; // nur User mit gesetztem Username
+                if(!u.username) return "";
+                const v = Number(u.cashgameTotalEUR || 0);
                 rank++;
-                const total = Number(u.totalEUR || 0);
                 return `
-            <tr>
-              <td>${rank}</td>
-              <td class="fw-semibold">${escapeHtml(u.username)}</td>
-              <td class="text-end ${amountClass(total)}">${formatEUR(total)}</td>
-            </tr>
-          `;
+          <tr>
+            <td>${rank}</td>
+            <td class="fw-semibold">${escapeHtml(u.username)}</td>
+            <td class="text-end ${amountClass(v)}">${formatEUR(v)}</td>
+          </tr>
+        `;
             }).join("");
 
-            tbodyLeaderboard.innerHTML = rows.trim()
+            tbodyLeaderboardCash.innerHTML = rows.trim()
                 ? rows
                 : `<tr><td colspan="3" class="small-muted">Noch keine Daten.</td></tr>`;
         });
+
+        const unsubTour = onSnapshot(qTour, (snap) => {
+            let rank = 0;
+            const rows = snap.docs.slice(0, 50).map(d => {
+                const u = d.data();
+                if(!u.username) return "";
+                const v = Number(u.tournamentTotalEUR || 0);
+                rank++;
+                return `
+          <tr>
+            <td>${rank}</td>
+            <td class="fw-semibold">${escapeHtml(u.username)}</td>
+            <td class="text-end ${amountClass(v)}">${formatEUR(v)}</td>
+          </tr>
+        `;
+            }).join("");
+
+            tbodyLeaderboardTour.innerHTML = rows.trim()
+                ? rows
+                : `<tr><td colspan="3" class="small-muted">Noch keine Daten.</td></tr>`;
+        });
+
+        return () => { unsubCash(); unsubTour(); };
     }
 
     // ---------------------------
-    // Auth state: enforce username on every login (Google + others)
+    // Auth State
     // ---------------------------
     onAuthStateChanged(auth, async (user) => {
         currentUser = user || null;
 
-        // cleanup
         if(unsubEntries){ unsubEntries(); unsubEntries = null; }
-        if(unsubLeaderboard){ unsubLeaderboard(); unsubLeaderboard = null; }
+        if(unsubLeaderboards){ unsubLeaderboards(); unsubLeaderboards = null; }
 
         if(!user){
             setAuthUI(false);
             whoAmI.textContent = "";
             authMsg.textContent = "";
-            tbodyMine.innerHTML = "";
-            tbodyLeaderboard.innerHTML = "";
-            if(chart){ chart.destroy(); chart = null; }
+
+            tbodyCash.innerHTML = "";
+            tbodyTour.innerHTML = "";
+            tbodyLeaderboardCash.innerHTML = "";
+            tbodyLeaderboardTour.innerHTML = "";
+
+            if(cashChart){ cashChart.destroy(); cashChart = null; }
+            if(tourChart){ tourChart.destroy(); tourChart = null; }
+
             return;
         }
 
         await ensureUserDocExists(user.uid);
         const udoc = await getUserDoc(user.uid);
 
-        // Enforce username (for Google first login and also for any account that lacks it)
         if(!udoc || !udoc.username){
             pendingGoogleUser = user;
             usernameInput.value = "";
             usernameError.textContent = "";
-            // show modal immediately; user cannot proceed without username
             setAuthUI(true);
             whoAmI.textContent = "Bitte Username festlegen, um fortzufahren.";
             usernameModal.show();
             return;
         }
 
-        // Normal app
         setAuthUI(true);
         whoAmI.textContent = `Angemeldet als: ${udoc.username} (nur du kannst deine Daten ändern)`;
 
-        // My entries listener
+        // Listen to all my entries once, then split into cash/tour in UI
         const qMine = query(collection(db, "users", user.uid, "entries"), orderBy("date", "asc"));
         unsubEntries = onSnapshot(qMine, async (snap) => {
             const entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderTablesAndStats(entries);
 
-            renderMyTable(entries);
-            buildChartEUR(entries);
-
-            // KPIs from user doc (fast) – fallback: recompute if missing
+            // ensure header total reflects latest user doc quickly (optional)
             const fresh = await getUserDoc(user.uid);
             const total = Number(fresh?.totalEUR || 0);
-            const t = Number(fresh?.tournamentTotalEUR || 0);
-            const c = Number(fresh?.cashgameTotalEUR || 0);
-            const count = Number(fresh?.entriesCountEUR || 0);
-            setKPIValues(total, t, c, count);
+            kpiTotal.textContent = formatEUR(total);
+            kpiTotal.className = "display-6 fw-semibold " + amountClass(total);
         });
 
-        // Leaderboard listener
-        unsubLeaderboard = listenLeaderboard();
+        unsubLeaderboards = listenLeaderboards();
     });
 </script>
 </body>
