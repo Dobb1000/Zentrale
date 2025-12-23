@@ -36,12 +36,6 @@
             box-shadow: 0 0 0 .25rem rgba(13,110,253,0.18);
             border-color: rgba(13,110,253,0.55);
         }
-        .table{ color:#e9eef5; }
-        .table thead th{
-            background: rgba(255,255,255,0.07);
-            border-bottom: 1px solid rgba(255,255,255,0.10);
-        }
-        .table tbody td{ border-color: rgba(255,255,255,0.10); }
         .badge-soft{
             background: rgba(255,255,255,0.12);
             border: 1px solid rgba(255,255,255,0.12);
@@ -60,104 +54,139 @@
         .nav-pills .nav-link.active{ background: rgba(13,110,253,0.85); }
         .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
-
-        /* ---------- GLOBAL bleibt wie bisher (dark UI) ---------- */
-        body { color:#e9eef5; } /* schon bei dir */
-
-        /* Überschriften/Top-Texte: hell */
-        h1, h2, h3, h4, h5, h6 { color:#fff; }
-
-        /* ---------- TABLES: eigene "helle Fläche" mit dunkler Schrift ---------- */
-
-        /* Tabelle bekommt einen hellen Hintergrund, damit dunkle Schrift Sinn macht */
-        .table-responsive{
+        /* ---------- TABLES: helle Fläche mit dunkler Schrift ---------- */
+        .table-wrap{
             background: rgba(255,255,255,0.96);
             border-radius: 14px;
             overflow: hidden;
             border: 1px solid rgba(0,0,0,0.10);
         }
-
-        /* Tabelle selbst: dunkle Schrift */
         .table{
             color: #111 !important;
             margin-bottom: 0;
         }
-
-        /* Kopfzeile: etwas dunklerer Hellton */
         .table thead th{
             color: #111 !important;
             background: rgba(0,0,0,0.04) !important;
             border-bottom: 1px solid rgba(0,0,0,0.12) !important;
+            white-space: nowrap;
         }
-
-        /* Zellen */
         .table tbody td,
         .table tbody th{
             color:#111 !important;
             border-color: rgba(0,0,0,0.08) !important;
+            vertical-align: middle;
         }
-
-        /* Hover */
         .table-hover tbody tr:hover{
             background: rgba(0,0,0,0.03) !important;
         }
+        .table .small-muted{ color: rgba(0,0,0,0.65) !important; }
 
-        /* muted Texte innerhalb Tabellen */
-        .table .small-muted{
-            color: rgba(0,0,0,0.65) !important;
-        }
-
-        /* Badge in Tabellen: dunkel lesbar */
         .table .badge-soft{
             background: rgba(0,0,0,0.06) !important;
             border: 1px solid rgba(0,0,0,0.12) !important;
             color: #111 !important;
         }
 
-        /* P/L Farben (gut sichtbar auf hell) */
         .table .amount-pos{ color:#137333 !important; }
         .table .amount-neg{ color:#b3261e !important; }
         .table .amount-zero{ color:#333 !important; }
-        /* ---------- BUTTONS IN TABLES: dunkel & lesbar ---------- */
 
-        /* Alle Buttons innerhalb von Tabellen */
         .table button,
         .table .btn{
             color: #111 !important;
             border-color: rgba(0,0,0,0.35) !important;
             background: rgba(0,0,0,0.04) !important;
+            white-space: nowrap;
         }
-
-        /* Hover */
         .table .btn:hover{
             background: rgba(0,0,0,0.10) !important;
             color: #000 !important;
         }
-
-        /* Outline-Light speziell neutralisieren */
         .table .btn-outline-light{
             color: #111 !important;
             border-color: rgba(0,0,0,0.35) !important;
             background: rgba(0,0,0,0.02) !important;
         }
-
-        /* Primary Buttons in Tabellen (falls mal genutzt) */
-        .table .btn-primary{
-            background: #e9ecef !important;
-            border-color: #adb5bd !important;
-            color: #111 !important;
-        }
-
-        /* Danger Buttons (z. B. Löschen) */
         .table .btn-outline-danger{
             color: #b3261e !important;
             border-color: rgba(179,38,30,0.6) !important;
         }
-
         .table .btn-outline-danger:hover{
             background: rgba(179,38,30,0.08) !important;
         }
 
+        /* ---------- MOBILE: Tabellen als Cards ---------- */
+        @media (max-width: 576px){
+            .container{ padding-left: 14px; padding-right: 14px; }
+
+            .nav-pills{
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 4px;
+            }
+            .nav-pills .nav-link{
+                white-space: nowrap;
+            }
+
+            /* in Cards keine horizontale "Kaputt"-Scroll-Hölle, sondern Card-Layout */
+            .table-wrap{ background: transparent; border: 0; }
+            .table, .table thead, .table tbody, .table th, .table td, .table tr{ display: block; }
+            .table thead{ display: none; }
+
+            .table tbody tr{
+                background: rgba(255,255,255,0.96);
+                border: 1px solid rgba(0,0,0,0.10);
+                border-radius: 14px;
+                padding: 10px 12px;
+                margin-bottom: 10px;
+                overflow: hidden;
+            }
+            .table tbody td{
+                border: 0 !important;
+                padding: 6px 0 !important;
+                display: grid;
+                grid-template-columns: 120px 1fr;
+                gap: 10px;
+                align-items: start;
+            }
+            .table tbody td::before{
+                content: attr(data-label);
+                font-weight: 700;
+                color: rgba(0,0,0,0.60);
+                white-space: nowrap;
+            }
+            .table tbody td.text-end{
+                text-align: left !important;
+            }
+
+            /* Buttons volle Breite auf Handy */
+            .table .btn{
+                width: 100%;
+                padding: 10px 12px;
+            }
+
+            /* In User-Spalte: UID in zweite Zeile */
+            .mobile-sub{
+                display:block;
+                font-size: 12px;
+                color: rgba(0,0,0,0.60);
+                margin-top: 2px;
+            }
+        }
+
+        /* Kleine Qualitätsverbesserung: Buttons/Inputs in Filterleiste umbrechen */
+        .filters-bar{
+            display:flex;
+            gap:.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filters-bar > *{ flex: 1 1 220px; }
+        @media (max-width: 576px){
+            .filters-bar > *{ flex: 1 1 100%; }
+        }
     </style>
 </head>
 
@@ -179,7 +208,7 @@
     <div id="loginArea" class="row g-3">
         <div class="col-12 col-lg-6">
             <div class="card p-3 p-md-4 h-100">
-                <h1 class="h4 mb-1">Admin Login</h1>
+                <h1 class="h4 mb-1 text-white">Admin Login</h1>
                 <div class="small-muted mb-3">Nur für Admin-Accounts. (E-Mail/Passwort oder Google via Firebase Auth)</div>
 
                 <form id="loginForm" class="row g-2">
@@ -208,7 +237,7 @@
 
                 <div class="small-muted">
                     Admin-Rechte werden über eine Allowlist geprüft:
-                    <span class="mono">config/admins</span> mit Feld <span class="mono">uids: ["..."]</span>.
+                    <span class="mono">admins/{uid}</span> als Dokument.
                     <br>
                     Hinweis: Für lokalen Test muss <span class="mono">localhost</span> als Authorized Domain in Firebase Auth erlaubt sein.
                 </div>
@@ -224,7 +253,7 @@
                 <div class="card p-3 p-md-4">
                     <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
                         <div>
-                            <h1 class="h3 mb-1" style="color:#fff;">Admin Panel</h1>
+                            <h1 class="h3 mb-1 text-white">Admin Panel</h1>
                             <div class="small-muted" id="adminWhoAmI"></div>
                         </div>
                         <span class="badge badge-soft" id="adminBadge">Admin</span>
@@ -262,7 +291,7 @@
                         <div class="card p-3 p-md-4 h-100">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div>
-                                    <h2 class="h5 mb-0" style="color:#fff;">Spieler (Users)</h2>
+                                    <h2 class="h5 mb-0 text-white">Spieler (Users)</h2>
                                     <div class="small-muted">Wähle einen Spieler aus, um dessen Einträge zu verwalten.</div>
                                 </div>
                                 <span class="badge badge-soft" id="userCount">0</span>
@@ -282,7 +311,7 @@
                         <div class="card p-3 p-md-4 h-100">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div>
-                                    <h2 class="h5 mb-0" style="color:#fff;">Ausgewählter Spieler</h2>
+                                    <h2 class="h5 mb-0 text-white">Ausgewählter Spieler</h2>
                                     <div class="small-muted" id="selectedUserInfo">Noch kein Spieler ausgewählt.</div>
                                 </div>
                                 <button class="btn btn-outline-light btn-sm" id="btnRecompute" type="button" disabled>
@@ -309,7 +338,7 @@
 
                             <hr class="border border-light border-opacity-10 my-3">
 
-                            <h3 class="h6 mb-2" style="color:#fff;">Admin-Eintrag hinzufügen (für ausgewählten Spieler)</h3>
+                            <h3 class="h6 mb-2 text-white">Admin-Eintrag hinzufügen (für ausgewählten Spieler)</h3>
                             <div class="row g-2 align-items-end">
                                 <div class="col-12 col-md-4">
                                     <label class="form-label small-muted mb-1">Datum</label>
@@ -345,27 +374,27 @@
                 <div class="row g-3">
                     <div class="col-12">
                         <div class="card p-3 p-md-4">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                                 <div>
-                                    <h2 class="h5 mb-0" style="color:#fff;">Alle Einträge (collectionGroup)</h2>
+                                    <h2 class="h5 mb-0 text-white">Alle Einträge (collectionGroup)</h2>
                                     <div class="small-muted">Admin-Übersicht über alle User-Einträge (EUR).</div>
                                 </div>
 
-                                <div class="d-flex gap-2 flex-wrap">
-                                    <select class="form-select form-select-sm" id="filterType" style="min-width: 170px;">
+                                <div class="filters-bar">
+                                    <select class="form-select form-select-sm" id="filterType">
                                         <option value="all" selected>Alle Typen</option>
                                         <option value="cashgame">Nur Cashgame</option>
                                         <option value="tournament">Nur Turnier</option>
                                     </select>
 
-                                    <input class="form-control form-control-sm" id="entrySearch" placeholder="Suche (username, note, uid) …" style="min-width: 260px;">
+                                    <input class="form-control form-control-sm" id="entrySearch" placeholder="Suche (username, note, uid) …">
                                 </div>
                             </div>
 
                             <hr class="border border-light border-opacity-10 my-3">
 
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
+                            <div class="table-wrap table-responsive">
+                                <table class="table table-hover align-middle">
                                     <thead>
                                     <tr>
                                         <th>Datum</th>
@@ -396,7 +425,7 @@
                         <div class="card p-3 p-md-4 h-100">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div>
-                                    <h2 class="h5 mb-0" style="color:#fff;">Leaderboard – Cashgame (EUR)</h2>
+                                    <h2 class="h5 mb-0 text-white">Leaderboard – Cashgame (EUR)</h2>
                                     <div class="small-muted">Sortiert nach cashgameTotalEUR.</div>
                                 </div>
                                 <span class="badge badge-soft">Top 50</span>
@@ -404,8 +433,8 @@
 
                             <hr class="border border-light border-opacity-10 my-3">
 
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
+                            <div class="table-wrap table-responsive">
+                                <table class="table table-hover align-middle">
                                     <thead>
                                     <tr>
                                         <th>#</th>
@@ -424,7 +453,7 @@
                         <div class="card p-3 p-md-4 h-100">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div>
-                                    <h2 class="h5 mb-0" style="color:#fff;">Leaderboard – Turnier (EUR)</h2>
+                                    <h2 class="h5 mb-0 text-white">Leaderboard – Turnier (EUR)</h2>
                                     <div class="small-muted">Sortiert nach tournamentTotalEUR.</div>
                                 </div>
                                 <span class="badge badge-soft">Top 50</span>
@@ -432,8 +461,8 @@
 
                             <hr class="border border-light border-opacity-10 my-3">
 
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
+                            <div class="table-wrap table-responsive">
+                                <table class="table table-hover align-middle">
                                     <thead>
                                     <tr>
                                         <th>#</th>
@@ -526,9 +555,6 @@
         serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-    // ---------------------------------------------------------
-    // Firebase Config (deins – identisch wie in index.html)
-    // ---------------------------------------------------------
     const firebaseConfig = {
         apiKey: "AIzaSyASN7beVlrbMtUwMr4BKfSx1EmUQZJAfNk",
         authDomain: "zentrale-ee675.firebaseapp.com",
@@ -543,9 +569,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // ---------------------------------------------------------
     // DOM
-    // ---------------------------------------------------------
     const loginArea = document.getElementById("loginArea");
     const adminArea = document.getElementById("adminArea");
     const authStatus = document.getElementById("authStatus");
@@ -596,9 +620,7 @@
     const btnSaveEntry = document.getElementById("btnSaveEntry");
     const btnDeleteEntry = document.getElementById("btnDeleteEntry");
 
-    // ---------------------------------------------------------
     // Helpers
-    // ---------------------------------------------------------
     const fmt = new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const formatEUR = (n) => `${fmt.format(Number(n || 0))} €`;
 
@@ -625,19 +647,14 @@
         authStatus.textContent = loggedIn ? "Eingeloggt" : "Nicht eingeloggt";
     }
 
-    // ---------------------------------------------------------
-    // Admin Allowlist: config/admins { uids: ["uid1","uid2"] }
-    // ---------------------------------------------------------
+    // Admin allowlist: admins/{uid} exists
     async function isAdminUid(uid){
         const ref = doc(db, "admins", uid);
         const snap = await getDoc(ref);
         return snap.exists();
     }
 
-
-    // ---------------------------------------------------------
-    // Auth (Email/Passwort + Google)
-    // ---------------------------------------------------------
+    // Auth
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         loginMsg.textContent = "";
@@ -652,7 +669,6 @@
         loginMsg.textContent = "";
         try{
             const provider = new GoogleAuthProvider();
-            // Optional: immer Account-Auswahl anzeigen
             provider.setCustomParameters({ prompt: "select_account" });
             await signInWithPopup(auth, provider);
         }catch(err){
@@ -664,9 +680,7 @@
         await signOut(auth);
     });
 
-    // ---------------------------------------------------------
-    // Data state/subscriptions
-    // ---------------------------------------------------------
+    // State/subscriptions
     let currentUser = null;
     let unsubUsers = null;
     let unsubAllEntries = null;
@@ -676,16 +690,12 @@
     let selectedUid = null;
     let selectedUser = null;
 
-    // edit modal state
     let editUid = null;
     let editEntryId = null;
 
-    // cache: uid -> username
     const usernameByUid = new Map();
 
-    // ---------------------------------------------------------
-    // Totals recompute for a given uid
-    // ---------------------------------------------------------
+    // recompute
     async function recomputeAndWriteTotalsEUR(uid){
         const entriesSnap = await getDocs(collection(db, "users", uid, "entries"));
         let total=0, t=0, c=0, count=0;
@@ -711,9 +721,7 @@
         return { total, t, c, count };
     }
 
-    // ---------------------------------------------------------
-    // Render: users list
-    // ---------------------------------------------------------
+    // USERS list
     let lastUsersSnapshot = [];
     function renderUsersList(users){
         lastUsersSnapshot = users;
@@ -786,9 +794,7 @@
         renderSelectedUserPanel(selectedUser);
     }
 
-    // ---------------------------------------------------------
-    // Admin add entry for selected user
-    // ---------------------------------------------------------
+    // Admin add entry
     btnAdminAddEntry.addEventListener("click", async () => {
         adminAddMsg.textContent = "";
         if(!selectedUid) return;
@@ -805,11 +811,7 @@
 
         try{
             await addDoc(collection(db, "users", selectedUid, "entries"), {
-                date,
-                type,
-                amount,
-                currency: "EUR",
-                note,
+                date, type, amount, currency: "EUR", note,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
                 adminEdited: true
@@ -836,10 +838,13 @@
         }
     });
 
-    // ---------------------------------------------------------
-    // All entries (collectionGroup) + filter/search client-side
-    // ---------------------------------------------------------
+    // All entries (collectionGroup) + filter/search
     let allEntriesCache = [];
+
+    function td(label, valueHtml, extraClass=""){
+        return `<td class="${extraClass}" data-label="${escapeHtml(label)}">${valueHtml}</td>`;
+    }
+
     function renderAllEntriesTable(){
         const typeF = filterType.value;
         const q = (entrySearch.value || "").trim().toLowerCase();
@@ -859,35 +864,36 @@
         tbodyAllEntries.innerHTML = rows.map(e => {
             const uname = usernameByUid.get(e.uid) || "(unbekannt)";
             const amount = Number(e.amount || 0);
+
+            const userHtml = `
+        <div class="fw-semibold">${escapeHtml(uname)}</div>
+        <span class="mobile-sub mono">${escapeHtml(e.uid)}</span>
+      `;
+
+            const actionHtml = `
+        <button class="btn btn-sm btn-outline-light"
+          data-edit-uid="${escapeHtml(e.uid)}"
+          data-edit-id="${escapeHtml(e.entryId)}"
+          type="button">Bearbeiten</button>
+      `;
+
             return `
         <tr>
-          <td>${escapeHtml(e.date || "")}</td>
-          <td>
-            <div class="fw-semibold">${escapeHtml(uname)}</div>
-            <div class="small-muted mono">${escapeHtml(e.uid)}</div>
-          </td>
-          <td><span class="badge badge-soft">${escapeHtml(e.type)}</span></td>
-          <td class="text-end ${amountClass(amount)}">${formatEUR(amount)}</td>
-          <td class="small-muted">${escapeHtml(e.note || "")}</td>
-          <td class="text-end">
-            <button class="btn btn-sm btn-outline-light"
-                    data-edit-uid="${escapeHtml(e.uid)}"
-                    data-edit-id="${escapeHtml(e.entryId)}"
-                    type="button">
-              Bearbeiten
-            </button>
-          </td>
+          ${td("Datum", escapeHtml(e.date || ""))}
+          ${td("User", userHtml)}
+          ${td("Typ", `<span class="badge badge-soft">${escapeHtml(e.type)}</span>`)}
+          ${td("Betrag", `<span class="${amountClass(amount)}">${formatEUR(amount)}</span>`, "text-end")}
+          ${td("Notiz", `<span class="small-muted">${escapeHtml(e.note || "")}</span>`)}
+          ${td("Aktion", actionHtml, "text-end")}
         </tr>
       `;
-        }).join("") || `<tr><td colspan="6" class="small-muted">Keine Einträge gefunden.</td></tr>`;
+        }).join("") || `<tr><td data-label="Info" colspan="6" class="small-muted">Keine Einträge gefunden.</td></tr>`;
     }
 
     filterType.addEventListener("change", renderAllEntriesTable);
     entrySearch.addEventListener("input", renderAllEntriesTable);
 
-    // ---------------------------------------------------------
-    // Edit modal open/save/delete
-    // ---------------------------------------------------------
+    // Edit modal open
     document.addEventListener("click", async (e) => {
         const btn = e.target.closest("button[data-edit-uid]");
         if(!btn) return;
@@ -932,11 +938,7 @@
 
         try{
             await updateDoc(doc(db, "users", editUid, "entries", editEntryId), {
-                date,
-                type,
-                amount,
-                note,
-                currency: "EUR",
+                date, type, amount, note, currency: "EUR",
                 updatedAt: serverTimestamp(),
                 adminEdited: true
             });
@@ -964,9 +966,7 @@
         }
     });
 
-    // ---------------------------------------------------------
-    // Leaderboards (two lists)
-    // ---------------------------------------------------------
+    // Leaderboards
     function listenLeaderboards(){
         const qCash = query(collection(db, "users"), orderBy("cashgameTotalEUR", "desc"), limit(50));
         const qTour = query(collection(db, "users"), orderBy("tournamentTotalEUR", "desc"), limit(50));
@@ -983,13 +983,11 @@
 
                 return `
           <tr>
-            <td>${rank}</td>
-            <td class="fw-semibold">${escapeHtml(u.username)}</td>
-            <td class="text-end ${amountClass(v)}">${formatEUR(v)}</td>
-            <td class="text-end">
-              <button class="btn btn-sm btn-outline-light" data-select-user="${escapeHtml(uid)}" type="button">
-                Öffnen
-              </button>
+            <td data-label="#">${rank}</td>
+            <td data-label="Username" class="fw-semibold">${escapeHtml(u.username)}</td>
+            <td data-label="Cashgame" class="text-end ${amountClass(v)}">${formatEUR(v)}</td>
+            <td data-label="Aktion" class="text-end">
+              <button class="btn btn-sm btn-outline-light" data-select-user="${escapeHtml(uid)}" type="button">Öffnen</button>
             </td>
           </tr>
         `;
@@ -997,7 +995,7 @@
 
             tbodyLbCash.innerHTML = rows.trim()
                 ? rows
-                : `<tr><td colspan="4" class="small-muted">Noch keine Daten.</td></tr>`;
+                : `<tr><td data-label="Info" colspan="4" class="small-muted">Noch keine Daten.</td></tr>`;
         });
 
         unsubLbTour = onSnapshot(qTour, (snap) => {
@@ -1012,13 +1010,11 @@
 
                 return `
           <tr>
-            <td>${rank}</td>
-            <td class="fw-semibold">${escapeHtml(u.username)}</td>
-            <td class="text-end ${amountClass(v)}">${formatEUR(v)}</td>
-            <td class="text-end">
-              <button class="btn btn-sm btn-outline-light" data-select-user="${escapeHtml(uid)}" type="button">
-                Öffnen
-              </button>
+            <td data-label="#">${rank}</td>
+            <td data-label="Username" class="fw-semibold">${escapeHtml(u.username)}</td>
+            <td data-label="Turnier" class="text-end ${amountClass(v)}">${formatEUR(v)}</td>
+            <td data-label="Aktion" class="text-end">
+              <button class="btn btn-sm btn-outline-light" data-select-user="${escapeHtml(uid)}" type="button">Öffnen</button>
             </td>
           </tr>
         `;
@@ -1026,13 +1022,11 @@
 
             tbodyLbTour.innerHTML = rows.trim()
                 ? rows
-                : `<tr><td colspan="4" class="small-muted">Noch keine Daten.</td></tr>`;
+                : `<tr><td data-label="Info" colspan="4" class="small-muted">Noch keine Daten.</td></tr>`;
         });
     }
 
-    // ---------------------------------------------------------
-    // User selection click (from user list or leaderboards)
-    // ---------------------------------------------------------
+    // Select user click (from list or leaderboards)
     document.addEventListener("click", async (e) => {
         const btn = e.target.closest("button[data-select-user]");
         if(!btn) return;
@@ -1041,13 +1035,10 @@
 
         selectedUid = uid;
         await refreshSelectedUserDoc();
-        // highlight selection in list (re-render)
         renderUsersList(lastUsersSnapshot);
     });
 
-    // ---------------------------------------------------------
     // Start/stop listeners
-    // ---------------------------------------------------------
     function startAdminListeners(){
         unsubUsers = onSnapshot(query(collection(db, "users"), orderBy("username", "asc")), (snap) => {
             const users = snap.docs.map(d => {
@@ -1089,12 +1080,11 @@
             (err) => {
                 console.error("Alle Einträge onSnapshot Fehler:", err);
                 tbodyAllEntries.innerHTML =
-                    `<tr><td colspan="6" class="text-danger">
-        Fehler beim Laden: ${escapeHtml(err.message || String(err))}
-      </td></tr>`;
+                    `<tr><td data-label="Fehler" colspan="6" class="text-danger">
+            Fehler beim Laden: ${escapeHtml(err.message || String(err))}
+          </td></tr>`;
             }
         );
-
 
         listenLeaderboards();
     }
@@ -1116,9 +1106,7 @@
         userList.innerHTML = "";
     }
 
-    // ---------------------------------------------------------
-    // Auth state: allow only admins
-    // ---------------------------------------------------------
+    // Auth state
     onAuthStateChanged(auth, async (user) => {
         currentUser = user || null;
         loginMsg.textContent = "";
