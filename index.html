@@ -11,8 +11,8 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-    <!-- Cropper.js (für iPhone/Handy Bild-Zuschneiden) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+
+
 
     <style>
         :root{ --card-radius: 18px; }
@@ -169,11 +169,6 @@
             background: rgba(15,23,42,0.06);
             margin-right: 10px;
         }
-
-        /* Crop modal look */
-        #cropModal .modal-body{
-            background: rgba(12, 16, 22, 0.95);
-        }
     </style>
 </head>
 
@@ -280,6 +275,7 @@
                         <div class="text-end">
                             <div class="small-muted">Mein Gesamt</div>
                             <div class="display-6 fw-semibold" id="kpiTotal">0,00 €</div>
+                            <!-- NEU: Performance-Text (besser als X% etc.) -->
                             <div class="small-muted mt-1" id="kpiPerformance">—</div>
                         </div>
                     </div>
@@ -612,7 +608,7 @@
                     <div>
                         <div class="small-muted mb-1">Profilbild</div>
                         <input class="form-control form-control-sm" type="file" id="profilePhotoFile" accept="image/*">
-                        <div class="small-muted mt-1">Empfehlung: quadratisch. Du kannst jetzt zuschneiden.</div>
+                        <div class="small-muted mt-1">Empfehlung: quadratisch, max. ~200 KB.</div>
                     </div>
                 </div>
 
@@ -629,39 +625,8 @@
     </div>
 </div>
 
-<!-- CROP MODAL -->
-<div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content text-light">
-            <div class="modal-header border-0">
-                <h5 class="modal-title">Bild zuschneiden</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Schließen"></button>
-            </div>
-            <div class="modal-body">
-                <div class="small-muted mb-2">
-                    Ziehe den Ausschnitt und zoome mit Pinch/Scroll, bis es passt (1:1 Quadrat).
-                </div>
-                <div style="max-height: 60vh;">
-                    <img id="cropImage" alt="Crop" style="max-width:100%; display:block;">
-                </div>
-            </div>
-            <div class="modal-footer border-0 d-flex justify-content-between">
-                <button class="btn btn-outline-light" id="btnCropCancel" type="button" data-bs-dismiss="modal">Abbrechen</button>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-light" id="btnCropZoomOut" type="button">−</button>
-                    <button class="btn btn-outline-light" id="btnCropZoomIn" type="button">+</button>
-                    <button class="btn btn-primary" id="btnCropApply" type="button">Übernehmen</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Cropper.js -->
-<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
 
 <script type="module">
     // Firebase imports (modular SDK via CDN)
@@ -761,14 +726,6 @@
     const profileMsg = document.getElementById("profileMsg");
     const btnSaveProfile = document.getElementById("btnSaveProfile");
 
-    // Crop modal
-    const cropModalEl = document.getElementById("cropModal");
-    const cropModal = new window.bootstrap.Modal(cropModalEl);
-    const cropImage = document.getElementById("cropImage");
-    const btnCropApply = document.getElementById("btnCropApply");
-    const btnCropZoomIn = document.getElementById("btnCropZoomIn");
-    const btnCropZoomOut = document.getElementById("btnCropZoomOut");
-
     // Helpers
     const fmt = new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const formatEUR = (amount) => `${fmt.format(Number(amount || 0))} €`;
@@ -825,7 +782,37 @@
         profilePreview.src = photoDataUrl || defaultAvatarDataUrl();
     }
 
-    // Performance helpers
+    // Performance helpers (besser als X% etc.)
+    function percentileRankDesc(values, myValue){
+        const xs = values
+            .map(v => Number(v))
+            .filter(v => Number.isFinite(v))
+            .sort((a,b)=> b-a);
+
+        if(xs.length === 0) return null;
+
+        const better = xs.filter(v => v > myValue).length;
+        const equal  = xs.filter(v => v === myValue).length;
+
+        const rankMid = better + (equal * 0.5);
+        return 1 - (rankMid / xs.length); // 1=top, 0=bottom
+    }
+
+    function formatPerformanceText({ myValue, values }){
+        const p = percentileRankDesc(values, myValue);
+        if(p === null) return "—";
+        if(values.length < 5) return "Vergleich: zu wenige Daten.";
+
+        const topPct = Math.max(1, Math.round((1 - p) * 100));
+        const betterThan = Math.max(0, Math.round(p * 100));
+
+        if(topPct <= 15){
+            return `Du bist Top ${topPct}% (besser als ${betterThan}% aller Spieler).`;
+        }
+        return `Du performst besser als ${betterThan}% aller Spieler.`;
+    }
+
+
     function performanceVsAll(values, myValue){
         const xs = values
             .map(v => Number(v))
@@ -838,12 +825,19 @@
         const higher = xs.filter(v => v > myValue).length;
         const equal = xs.filter(v => v === myValue).length;
 
-        const rank = higher + 1;
+        // Rank (1 = best) in descending order.
+        // Use mid-rank for ties:
+        // better = higher values, so rank starts after all higher values
+        const rank = higher + 1; // simple rank (ties share same rank)
         const denom = (n - 1);
 
+        // "besser als ..." = share of players below you
         const betterThanPct = Math.round((lower / denom) * 100);
+
+        // "schlechter als ..." = share of players above you
         const worseThanPct = Math.round((higher / denom) * 100);
 
+        // Decide which phrasing to show (always one of them)
         let text = "";
         if(lower >= higher){
             text = `Du performst besser als ${betterThanPct}% aller Spieler (Platz ${rank} von ${n}).`;
@@ -851,6 +845,7 @@
             text = `Du performst schlechter als ${worseThanPct}% aller Spieler (Platz ${rank} von ${n}).`;
         }
 
+        // If everyone is equal, be explicit:
         if(equal === n){
             text = `Alle performen aktuell gleich (Platz 1 von ${n}).`;
         }
@@ -1242,12 +1237,14 @@
       `;
         }
 
+        // 2–1–3 Darstellung (Layout), Daten: top3[0]=#1, top3[1]=#2, top3[2]=#3
         slots[1].innerHTML = slotHtml(1, top3[0] || null);
         slots[2].innerHTML = slotHtml(2, top3[1] || null);
         slots[3].innerHTML = slotHtml(3, top3[2] || null);
     }
 
-    // Leaderboards + Performance
+    // Leaderboards + Performance (gegen alle anderen)
+    // Performance basiert auf TOTAL (totalEUR) vs alle User totalEUR
     function listenLeaderboards(){
         const qCash = query(collection(db, "users"), orderBy("cashgameTotalEUR", "desc"));
         const qTour = query(collection(db, "users"), orderBy("tournamentTotalEUR", "desc"));
@@ -1317,24 +1314,28 @@
                 : `<tr><td colspan="3" class="small-muted">Keine weiteren Plätze (ab #4).</td></tr>`;
         });
 
+        // Performance: mein totalEUR vs alle anderen totalEUR
         const unsubTotal = onSnapshot(qTotal, async (snap) => {
             if(!currentUser){
                 kpiPerformance.textContent = "—";
                 return;
             }
 
+            // Take totals only from users that actually have a username (optional, but usually desired)
             const users = snap.docs
                 .map(d => ({ id: d.id, ...d.data() }))
                 .filter(u => !!u.username);
 
             const totals = users.map(u => Number(u.totalEUR || 0));
 
+            // Get my total reliably (don’t depend on being in the same filtered list)
             const myFresh = await getUserDoc(currentUser.uid);
             const myTotal = Number(myFresh?.totalEUR || 0);
 
             const r = performanceVsAll(totals, myTotal);
             kpiPerformance.textContent = r.text;
         });
+
 
         return () => { unsubCash(); unsubTour(); unsubTotal(); };
     }
@@ -1352,27 +1353,7 @@
         profileModal.show();
     });
 
-    // --- CROPPER (Quadrat-Auswahl beim Handy Upload) ---
     let stagedPhotoDataUrl = null;
-    let cropper = null;
-
-    function readFileAsDataURL(file){
-        return new Promise((resolve, reject) => {
-            const r = new FileReader();
-            r.onerror = reject;
-            r.onload = () => resolve(r.result);
-            r.readAsDataURL(file);
-        });
-    }
-
-    function cleanupCropper(){
-        if(cropper){
-            cropper.destroy();
-            cropper = null;
-        }
-        cropImage.src = "";
-    }
-
     profilePhotoFile.addEventListener("change", async (e) => {
         profileMsg.textContent = "";
         stagedPhotoDataUrl = null;
@@ -1386,66 +1367,12 @@
         }
 
         try{
-            const dataUrl = await readFileAsDataURL(file);
-            cropImage.src = dataUrl;
-
-            cropModal.show();
-
-            cropModalEl.addEventListener("shown.bs.modal", function initOnce(){
-                cropModalEl.removeEventListener("shown.bs.modal", initOnce);
-                cleanupCropper();
-
-                cropper = new Cropper(cropImage, {
-                    aspectRatio: 1,
-                    viewMode: 1,
-                    dragMode: "move",
-                    autoCropArea: 1,
-                    background: false,
-                    movable: true,
-                    zoomable: true,
-                    scalable: false,
-                    rotatable: false,
-                    responsive: true,
-                    cropBoxResizable: true,
-                    cropBoxMovable: true,
-                    guides: false,
-                    center: true
-                });
-            }, { once: true });
-
+            const dataUrl = await fileToResizedDataUrl(file, 256, 0.82);
+            stagedPhotoDataUrl = dataUrl;
+            profilePreview.src = stagedPhotoDataUrl;
         }catch(err){
             profileMsg.textContent = "Bild konnte nicht verarbeitet werden.";
         }
-    });
-
-    btnCropZoomIn.addEventListener("click", () => { if(cropper) cropper.zoom(0.1); });
-    btnCropZoomOut.addEventListener("click", () => { if(cropper) cropper.zoom(-0.1); });
-
-    btnCropApply.addEventListener("click", async () => {
-        profileMsg.textContent = "";
-        if(!cropper) return;
-
-        try{
-            const canvas = cropper.getCroppedCanvas({
-                width: 256,
-                height: 256,
-                imageSmoothingEnabled: true,
-                imageSmoothingQuality: "high"
-            });
-
-            stagedPhotoDataUrl = canvas.toDataURL("image/jpeg", 0.85);
-            profilePreview.src = stagedPhotoDataUrl;
-
-            cropModal.hide();
-        }catch(err){
-            profileMsg.textContent = "Zuschneiden fehlgeschlagen.";
-        }
-    });
-
-    cropModalEl.addEventListener("hidden.bs.modal", () => {
-        cleanupCropper();
-        // iOS: gleicher File nochmal auswählbar
-        profilePhotoFile.value = "";
     });
 
     btnSaveProfile.addEventListener("click", async () => {
@@ -1476,6 +1403,34 @@
             btnSaveProfile.disabled = false;
         }
     });
+
+    // Resize helper
+    function fileToResizedDataUrl(file, maxSizePx = 256, quality = 0.82){
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = reject;
+            reader.onload = () => {
+                const img = new Image();
+                img.onerror = reject;
+                img.onload = () => {
+                    const ratio = Math.min(1, maxSizePx / Math.max(img.width, img.height));
+                    const w = Math.round(img.width * ratio);
+                    const h = Math.round(img.height * ratio);
+
+                    const canvas = document.createElement("canvas");
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, w, h);
+
+                    const dataUrl = canvas.toDataURL("image/jpeg", quality);
+                    resolve(dataUrl);
+                };
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 
     // Auth State
     onAuthStateChanged(auth, async (user) => {
@@ -1529,11 +1484,13 @@
         whoAmI.textContent = `${udoc.username}`;
         setNavProfile(udoc.username, udoc.photoDataUrl || null);
 
+        // Listen to all my entries once, then split into cash/tour in UI
         const qMine = query(collection(db, "users", user.uid, "entries"), orderBy("date", "asc"));
         unsubEntries = onSnapshot(qMine, async (snap) => {
             const entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             renderTablesAndStats(entries);
 
+            // refresh header total from user doc
             const fresh = await getUserDoc(user.uid);
             const total = Number(fresh?.totalEUR || 0);
             kpiTotal.textContent = formatEUR(total);
