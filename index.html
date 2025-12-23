@@ -13,58 +13,158 @@
 
     <style>
         :root{ --card-radius: 18px; }
+
         body{
-            background: radial-gradient(1200px 600px at 20% 0%, #1b3a2a 0%, rgba(27,58,42,0) 55%),
-            radial-gradient(1000px 500px at 80% 10%, #2a1b3a 0%, rgba(42,27,58,0) 55%),
-            #0b0f14;
+            background:
+                    radial-gradient(1200px 600px at 20% 0%, #1b3a2a 0%, rgba(27,58,42,0) 55%),
+                    radial-gradient(1000px 500px at 80% 10%, #2a1b3a 0%, rgba(42,27,58,0) 55%),
+                    #0b0f14;
             color:#e9eef5;
         }
+
         .navbar{
             backdrop-filter: blur(10px);
             background: rgba(10, 14, 20, 0.65) !important;
             border-bottom: 1px solid rgba(255,255,255,0.08);
         }
+
         .card{
             border: 1px solid rgba(255,255,255,0.10);
             background: rgba(255,255,255,0.06);
             border-radius: var(--card-radius);
             box-shadow: 0 10px 30px rgba(0,0,0,0.35);
         }
+
         .form-control, .form-select{
             background: rgba(255,255,255,0.08);
             border: 1px solid rgba(255,255,255,0.12);
             color: #e9eef5;
         }
+
+        .form-control::placeholder{ color: rgba(233,238,245,0.60); }
+
         .form-control:focus, .form-select:focus{
             box-shadow: 0 0 0 .25rem rgba(13,110,253,0.18);
             border-color: rgba(13,110,253,0.55);
         }
-        .table{ color:#e9eef5; }
-        .table thead th{
-            background: rgba(255,255,255,0.07);
-            border-bottom: 1px solid rgba(255,255,255,0.10);
-        }
-        .table tbody td{ border-color: rgba(255,255,255,0.10); }
+
         .badge-soft{
             background: rgba(255,255,255,0.12);
             border: 1px solid rgba(255,255,255,0.12);
             color: #e9eef5;
         }
+
         .small-muted{ color: rgba(233,238,245,0.72); }
+
         .amount-pos{ color:#57e389; font-variant-numeric: tabular-nums; }
         .amount-neg{ color:#ff6b6b; font-variant-numeric: tabular-nums; }
         .amount-zero{ color:#cbd5e1; font-variant-numeric: tabular-nums; }
+
         canvas{ max-height: 360px; }
+
         .modal-content{
             border: 1px solid rgba(255,255,255,0.10);
             background: rgba(12, 16, 22, 0.95);
             border-radius: 18px;
         }
-        .nav-pills .nav-link{
-            border-radius: 999px;
+
+        .nav-pills .nav-link{ border-radius: 999px; }
+        .nav-pills .nav-link.active{ background: rgba(13,110,253,0.85); }
+
+        /* ===== Tables: readable on light table backgrounds inside cards ===== */
+        .table{
+            color: #0f172a;
+            background: rgba(255,255,255,0.90);
+            border-radius: 12px;
+            overflow: hidden;
         }
-        .nav-pills .nav-link.active{
-            background: rgba(13,110,253,0.85);
+        .table thead th{
+            background: rgba(248,250,252,0.95);
+            color: #0f172a;
+            border-bottom: 1px solid rgba(15,23,42,0.12);
+        }
+        .table tbody td{
+            color: #0f172a;
+            border-color: rgba(15,23,42,0.10);
+        }
+        .table-hover > tbody > tr:hover > *{
+            background: rgba(13,110,253,0.06);
+            color: #0f172a;
+        }
+        .table .small-muted{ color: rgba(15,23,42,0.72); }
+
+        /* Buttons: avoid white outline on dark background */
+        .btn-outline-light{
+            color: rgba(233,238,245,0.92);
+            border-color: rgba(233,238,245,0.35);
+        }
+        .btn-outline-light:hover{
+            color:#0b0f14;
+            background: rgba(233,238,245,0.92);
+            border-color: rgba(233,238,245,0.92);
+        }
+        .btn-outline-danger{
+            border-color: rgba(220,53,69,0.65);
+        }
+        .btn-outline-danger:hover{
+            background: rgba(220,53,69,0.92);
+            border-color: rgba(220,53,69,0.92);
+        }
+
+        /* Profile UI */
+        .avatar{
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.20);
+            background: rgba(255,255,255,0.10);
+        }
+
+        /* Podium */
+        .podium{
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            align-items: end;
+            margin-bottom: 14px;
+        }
+        .podium-step{
+            border-radius: 14px;
+            padding: 10px 10px 12px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.10);
+            text-align: center;
+        }
+        .podium-step.step-1{ min-height: 210px; }
+        .podium-step.step-2{ min-height: 180px; }
+        .podium-step.step-3{ min-height: 165px; }
+        .podium-rank{
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            opacity: 0.95;
+        }
+        .podium-avatar{
+            width: 72px;
+            height: 72px;
+            border-radius: 999px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.10);
+            margin: 10px auto 8px;
+            display:block;
+        }
+        .podium-name{ font-weight: 700; margin-bottom: 2px; }
+        .podium-value{ font-variant-numeric: tabular-nums; }
+
+        .lb-avatar{
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            object-fit: cover;
+            border: 1px solid rgba(15,23,42,0.18);
+            background: rgba(15,23,42,0.06);
+            margin-right: 10px;
         }
     </style>
 </head>
@@ -76,7 +176,20 @@
 
         <div class="ms-auto d-flex gap-2 align-items-center">
             <span class="badge badge-soft" id="authStatus">Nicht eingeloggt</span>
-            <button class="btn btn-sm btn-outline-light d-none" id="btnLogout" type="button">Logout</button>
+
+            <!-- Profile (only when logged in) -->
+            <div class="dropdown d-none" id="profileMenuWrap">
+                <button class="btn btn-sm btn-outline-light d-flex align-items-center gap-2 dropdown-toggle"
+                        type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img id="navAvatar" class="avatar" alt="Profilbild">
+                    <span id="navUsername" class="d-none d-sm-inline">Profil</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button class="dropdown-item" id="btnOpenProfile" type="button">Profil bearbeiten</button></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><button class="dropdown-item text-danger" id="btnLogout" type="button">Logout</button></li>
+                </ul>
+            </div>
         </div>
     </div>
 </nav>
@@ -87,7 +200,7 @@
     <div id="authArea" class="row g-3">
         <div class="col-12 col-lg-6">
             <div class="card p-3 p-md-4 h-100">
-                <h1 class="h4 mb-1">Login</h1>
+                <h1 class="h4 mb-1" style="color: #fff">Login</h1>
                 <div class="small-muted mb-3">Melde dich an, um deine Einträge zu verwalten.</div>
 
                 <form id="loginForm" class="row g-2">
@@ -116,7 +229,7 @@
 
         <div class="col-12 col-lg-6">
             <div class="card p-3 p-md-4 h-100">
-                <h2 class="h4 mb-1">Registrieren</h2>
+                <h2 class="h4 mb-1" style="color: #fff">Registrieren</h2>
                 <div class="small-muted mb-3">Account erstellen (E-Mail & Passwort). Username wird sofort gesetzt.</div>
 
                 <form id="registerForm" class="row g-2">
@@ -154,12 +267,13 @@
                 <div class="card p-3 p-md-4">
                     <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
                         <div>
-                            <h1 class="h3 mb-1" style="color:#fff;">Meine Einträge</h1>
-                            <div class="small-muted" id="whoAmI"></div>
+                            <h1 class="h2 mb-1" style="color:#fff;" id="whoAmI"></h1>
                         </div>
                         <div class="text-end">
-                            <div class="small-muted">Mein Gesamt (EUR)</div>
+                            <div class="small-muted">Mein Gesamt</div>
                             <div class="display-6 fw-semibold" id="kpiTotal">0,00 €</div>
+                            <!-- NEU: Performance-Text (besser als X% etc.) -->
+                            <div class="small-muted mt-1" id="kpiPerformance">—</div>
                         </div>
                     </div>
 
@@ -197,7 +311,7 @@
                     <!-- KPIs Cash -->
                     <div class="col-12 col-lg-4">
                         <div class="card p-3 p-md-4 h-100">
-                            <h2 class="h5 mb-3" style="color:#fff;">Cashgame Stats (EUR)</h2>
+                            <h2 class="h5 mb-3" style="color:#fff;">Cashgame Stats</h2>
                             <div class="row g-3">
                                 <div class="col-12">
                                     <div class="small-muted">Cashgame Gesamt</div>
@@ -205,7 +319,7 @@
                                 </div>
                                 <div class="col-6">
                                     <div class="small-muted">Einträge</div>
-                                    <div class="h4 mb-0" id="kpiCashCount">0</div>
+                                    <div class="h4 mb-0" id="kpiCashCount" style="color: #fff">0</div>
                                 </div>
                                 <div class="col-6">
                                     <div class="small-muted">Ø pro Eintrag</div>
@@ -244,7 +358,7 @@
                     <div class="col-12 col-lg-4">
                         <div class="card p-3 p-md-4 h-100">
                             <h2 class="h5 mb-2" style="color:#fff;">Cashgame Chart</h2>
-                            <div class="small-muted mb-2">Kumuliert nach Datum (EUR).</div>
+                            <div class="small-muted mb-2">Kumuliert nach Datum.</div>
                             <canvas id="cashChart"></canvas>
                         </div>
                     </div>
@@ -288,7 +402,7 @@
                     <!-- KPIs Tour -->
                     <div class="col-12 col-lg-4">
                         <div class="card p-3 p-md-4 h-100">
-                            <h2 class="h5 mb-3" style="color:#fff;">Turnier Stats (EUR)</h2>
+                            <h2 class="h5 mb-3" style="color:#fff;">Turnier Stats</h2>
                             <div class="row g-3">
                                 <div class="col-12">
                                     <div class="small-muted">Turnier Gesamt</div>
@@ -296,7 +410,7 @@
                                 </div>
                                 <div class="col-6">
                                     <div class="small-muted">Einträge</div>
-                                    <div class="h4 mb-0" id="kpiTourCount">0</div>
+                                    <div class="h4 mb-0" id="kpiTourCount" style="color: #fff">0</div>
                                 </div>
                                 <div class="col-6">
                                     <div class="small-muted">Ø pro Eintrag</div>
@@ -335,7 +449,7 @@
                     <div class="col-12 col-lg-4">
                         <div class="card p-3 p-md-4 h-100">
                             <h2 class="h5 mb-2" style="color:#fff;">Turnier Chart</h2>
-                            <div class="small-muted mb-2">Kumuliert nach Datum (EUR).</div>
+                            <div class="small-muted mb-2">Kumuliert nach Datum.</div>
                             <canvas id="tourChart"></canvas>
                         </div>
                     </div>
@@ -373,7 +487,7 @@
                 </div>
             </div>
 
-            <!-- LEADERBOARD TAB (Cash + Turnier) -->
+            <!-- LEADERBOARD TAB -->
             <div class="tab-pane fade" id="tabLead" role="tabpanel" aria-labelledby="tabLeadBtn">
                 <div class="row g-3">
 
@@ -382,21 +496,27 @@
                         <div class="card p-3 p-md-4 h-100">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div>
-                                    <h2 class="h5 mb-0" style="color:#fff;">Leaderboard – Cashgame (EUR)</h2>
-                                    <div class="small-muted">Sortiert nach Cashgame-Gesamt.</div>
+                                    <h2 class="h5 mb-0" style="color:#fff;">Leaderboard – Cashgame</h2>
                                 </div>
                                 <span class="badge badge-soft">Top 50</span>
                             </div>
 
                             <hr class="border border-light border-opacity-10 my-3">
 
+                            <!-- Podium Cash -->
+                            <div class="podium">
+                                <div class="podium-step step-2" id="podiumCash2"></div>
+                                <div class="podium-step step-1" id="podiumCash1"></div>
+                                <div class="podium-step step-3" id="podiumCash3"></div>
+                            </div>
+
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>Username</th>
-                                        <th class="text-end">Cashgame (EUR)</th>
+                                        <th>Spieler</th>
+                                        <th class="text-end">Cashgame</th>
                                     </tr>
                                     </thead>
                                     <tbody id="tbodyLeaderboardCash"></tbody>
@@ -410,21 +530,27 @@
                         <div class="card p-3 p-md-4 h-100">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div>
-                                    <h2 class="h5 mb-0" style="color:#fff;">Leaderboard – Turnier (EUR)</h2>
-                                    <div class="small-muted">Sortiert nach Turnier-Gesamt.</div>
+                                    <h2 class="h5 mb-0" style="color:#fff;">Leaderboard – Turnier</h2>
                                 </div>
                                 <span class="badge badge-soft">Top 50</span>
                             </div>
 
                             <hr class="border border-light border-opacity-10 my-3">
 
+                            <!-- Podium Tour -->
+                            <div class="podium">
+                                <div class="podium-step step-2" id="podiumTour2"></div>
+                                <div class="podium-step step-1" id="podiumTour1"></div>
+                                <div class="podium-step step-3" id="podiumTour3"></div>
+                            </div>
+
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>Username</th>
-                                        <th class="text-end">Turnier (EUR)</th>
+                                        <th>Spieler</th>
+                                        <th class="text-end">Turnier</th>
                                     </tr>
                                     </thead>
                                     <tbody id="tbodyLeaderboardTour"></tbody>
@@ -434,17 +560,13 @@
                     </div>
 
                     <div class="col-12">
-                        <div class="small-muted">
-                            Hinweis: Ohne serverseitige Absicherung bleibt das Leaderboard eine Komfortfunktion.
-                        </div>
+                        <div class="small-muted"></div>
                     </div>
 
                 </div>
             </div>
-
         </div><!-- /tab-content -->
     </div><!-- /appArea -->
-
 </main>
 
 <!-- USERNAME MODAL -->
@@ -469,13 +591,42 @@
     </div>
 </div>
 
+<!-- PROFILE MODAL -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-light">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Profil bearbeiten</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Schließen"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <img id="profilePreview" class="podium-avatar" alt="Profilbild">
+                    <div>
+                        <div class="small-muted mb-1">Profilbild</div>
+                        <input class="form-control form-control-sm" type="file" id="profilePhotoFile" accept="image/*">
+                        <div class="small-muted mt-1">Empfehlung: quadratisch, max. ~200 KB.</div>
+                    </div>
+                </div>
+
+                <label class="form-label small-muted mb-1">Username</label>
+                <input class="form-control" id="profileUsername" maxlength="20">
+
+                <div class="small text-danger mt-2" id="profileMsg"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-outline-light" data-bs-dismiss="modal" type="button">Abbrechen</button>
+                <button class="btn btn-primary" id="btnSaveProfile" type="button">Speichern</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script type="module">
-    // ---------------------------
     // Firebase imports (modular SDK via CDN)
-    // ---------------------------
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import {
         getAuth, onAuthStateChanged, signOut,
@@ -489,9 +640,7 @@
         serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-    // ---------------------------
-    // 1) Firebase Config
-    // ---------------------------
+    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyASN7beVlrbMtUwMr4BKfSx1EmUQZJAfNk",
         authDomain: "zentrale-ee675.firebaseapp.com",
@@ -506,14 +655,17 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // ---------------------------
     // DOM refs
-    // ---------------------------
     const authArea = document.getElementById("authArea");
     const appArea = document.getElementById("appArea");
     const authStatus = document.getElementById("authStatus");
-    const btnLogout = document.getElementById("btnLogout");
     const authMsg = document.getElementById("authMsg");
+
+    const profileMenuWrap = document.getElementById("profileMenuWrap");
+    const navAvatar = document.getElementById("navAvatar");
+    const navUsername = document.getElementById("navUsername");
+    const btnOpenProfile = document.getElementById("btnOpenProfile");
+    const btnLogout = document.getElementById("btnLogout");
 
     const loginForm = document.getElementById("loginForm");
     const registerForm = document.getElementById("registerForm");
@@ -521,6 +673,7 @@
 
     const whoAmI = document.getElementById("whoAmI");
     const kpiTotal = document.getElementById("kpiTotal");
+    const kpiPerformance = document.getElementById("kpiPerformance");
 
     // Cash UI
     const cashDate = document.getElementById("cashDate");
@@ -547,6 +700,12 @@
     // Leaderboards
     const tbodyLeaderboardCash = document.getElementById("tbodyLeaderboardCash");
     const tbodyLeaderboardTour = document.getElementById("tbodyLeaderboardTour");
+    const podiumCash1 = document.getElementById("podiumCash1");
+    const podiumCash2 = document.getElementById("podiumCash2");
+    const podiumCash3 = document.getElementById("podiumCash3");
+    const podiumTour1 = document.getElementById("podiumTour1");
+    const podiumTour2 = document.getElementById("podiumTour2");
+    const podiumTour3 = document.getElementById("podiumTour3");
 
     // Username modal
     const usernameModalEl = document.getElementById("usernameModal");
@@ -555,13 +714,21 @@
     const saveUsernameBtn = document.getElementById("saveUsernameBtn");
     const usernameModal = new window.bootstrap.Modal(usernameModalEl);
 
-    // ---------------------------
+    // Profile modal
+    const profileModalEl = document.getElementById("profileModal");
+    const profileModal = new window.bootstrap.Modal(profileModalEl);
+    const profilePreview = document.getElementById("profilePreview");
+    const profilePhotoFile = document.getElementById("profilePhotoFile");
+    const profileUsername = document.getElementById("profileUsername");
+    const profileMsg = document.getElementById("profileMsg");
+    const btnSaveProfile = document.getElementById("btnSaveProfile");
+
     // Helpers
-    // ---------------------------
     const fmt = new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const formatEUR = (amount) => `${fmt.format(amount)} €`;
+    const formatEUR = (amount) => `${fmt.format(Number(amount || 0))} €`;
 
     function amountClass(amount){
+        amount = Number(amount || 0);
         if(amount > 0) return "amount-pos";
         if(amount < 0) return "amount-neg";
         return "amount-zero";
@@ -584,19 +751,113 @@
     function setAuthUI(isLoggedIn){
         authArea.classList.toggle("d-none", isLoggedIn);
         appArea.classList.toggle("d-none", !isLoggedIn);
-        btnLogout.classList.toggle("d-none", !isLoggedIn);
+        profileMenuWrap.classList.toggle("d-none", !isLoggedIn);
         authStatus.textContent = isLoggedIn ? "Eingeloggt" : "Nicht eingeloggt";
     }
 
-    // ---------------------------
-    // Firestore: user doc + username handling
-    // ---------------------------
+    // Default avatar (SVG data url)
+    function defaultAvatarDataUrl(){
+        const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#334155"/>
+            <stop offset="1" stop-color="#0f172a"/>
+          </linearGradient>
+        </defs>
+        <rect width="128" height="128" rx="64" fill="url(#g)"/>
+        <circle cx="64" cy="52" r="22" fill="#e2e8f0" opacity="0.9"/>
+        <path d="M22,118c8-24,30-34,42-34s34,10,42,34" fill="#e2e8f0" opacity="0.9"/>
+      </svg>
+    `.trim();
+        return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    }
+
+    function setNavProfile(username, photoDataUrl){
+        navUsername.textContent = username || "Profil";
+        navAvatar.src = photoDataUrl || defaultAvatarDataUrl();
+        profilePreview.src = photoDataUrl || defaultAvatarDataUrl();
+    }
+
+    // Performance helpers (besser als X% etc.)
+    function percentileRankDesc(values, myValue){
+        const xs = values
+            .map(v => Number(v))
+            .filter(v => Number.isFinite(v))
+            .sort((a,b)=> b-a);
+
+        if(xs.length === 0) return null;
+
+        const better = xs.filter(v => v > myValue).length;
+        const equal  = xs.filter(v => v === myValue).length;
+
+        const rankMid = better + (equal * 0.5);
+        return 1 - (rankMid / xs.length); // 1=top, 0=bottom
+    }
+
+    function formatPerformanceText({ myValue, values }){
+        const p = percentileRankDesc(values, myValue);
+        if(p === null) return "—";
+        if(values.length < 5) return "Vergleich: zu wenige Daten.";
+
+        const topPct = Math.max(1, Math.round((1 - p) * 100));
+        const betterThan = Math.max(0, Math.round(p * 100));
+
+        if(topPct <= 15){
+            return `Du bist Top ${topPct}% (besser als ${betterThan}% aller Spieler).`;
+        }
+        return `Du performst besser als ${betterThan}% aller Spieler.`;
+    }
+
+
+    function performanceVsAll(values, myValue){
+        const xs = values
+            .map(v => Number(v))
+            .filter(v => Number.isFinite(v));
+
+        const n = xs.length;
+        if(n <= 1) return { text: "Vergleich: zu wenige Daten.", rank: null, n };
+
+        const lower = xs.filter(v => v < myValue).length;
+        const higher = xs.filter(v => v > myValue).length;
+        const equal = xs.filter(v => v === myValue).length;
+
+        // Rank (1 = best) in descending order.
+        // Use mid-rank for ties:
+        // better = higher values, so rank starts after all higher values
+        const rank = higher + 1; // simple rank (ties share same rank)
+        const denom = (n - 1);
+
+        // "besser als ..." = share of players below you
+        const betterThanPct = Math.round((lower / denom) * 100);
+
+        // "schlechter als ..." = share of players above you
+        const worseThanPct = Math.round((higher / denom) * 100);
+
+        // Decide which phrasing to show (always one of them)
+        let text = "";
+        if(lower >= higher){
+            text = `Du performst besser als ${betterThanPct}% aller Spieler (Platz ${rank} von ${n}).`;
+        }else{
+            text = `Du performst schlechter als ${worseThanPct}% aller Spieler (Platz ${rank} von ${n}).`;
+        }
+
+        // If everyone is equal, be explicit:
+        if(equal === n){
+            text = `Alle performen aktuell gleich (Platz 1 von ${n}).`;
+        }
+
+        return { text, rank, n };
+    }
+
+    // Firestore: user doc + username
     async function ensureUserDocExists(uid){
         const ref = doc(db, "users", uid);
         const snap = await getDoc(ref);
         if(!snap.exists()){
             await setDoc(ref, {
                 username: null,
+                photoDataUrl: null,
                 totalEUR: 0,
                 tournamentTotalEUR: 0,
                 cashgameTotalEUR: 0,
@@ -623,9 +884,23 @@
         await setDoc(doc(db, "users", uid), { username, updatedAt: serverTimestamp() }, { merge: true });
     }
 
-    // ---------------------------
+    async function updateProfile(uid, { username, photoDataUrl }){
+        const udoc = await getUserDoc(uid);
+        const currentUsername = udoc?.username || null;
+
+        if(username && username !== currentUsername){
+            if(!isValidUsername(username)) throw new Error("Username ungültig (3–20 Zeichen, nur Buchstaben/Zahlen/_).");
+            if(await isUsernameTaken(username)) throw new Error("Username ist bereits vergeben.");
+        }
+
+        await setDoc(doc(db, "users", uid), {
+            username: username ?? currentUsername ?? null,
+            photoDataUrl: photoDataUrl ?? (udoc?.photoDataUrl ?? null),
+            updatedAt: serverTimestamp()
+        }, { merge: true });
+    }
+
     // Auth: Email/password
-    // ---------------------------
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         authMsg.textContent = "";
@@ -664,6 +939,7 @@
 
             await setDoc(doc(db, "users", cred.user.uid), {
                 username,
+                photoDataUrl: null,
                 totalEUR: 0,
                 tournamentTotalEUR: 0,
                 cashgameTotalEUR: 0,
@@ -677,9 +953,7 @@
         }
     });
 
-    // ---------------------------
     // Auth: Google + username enforcement
-    // ---------------------------
     let pendingGoogleUser = null;
 
     btnGoogle.addEventListener("click", async () => {
@@ -733,9 +1007,7 @@
         await signOut(auth);
     });
 
-    // ---------------------------
-    // Entries: add/delete + recompute totals (EUR)
-    // ---------------------------
+    // Entries: add/delete + recompute totals
     async function addEntry(uid, entry){
         const ref = collection(db, "users", uid, "entries");
         await addDoc(ref, { ...entry, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
@@ -824,9 +1096,7 @@
         }
     });
 
-    // ---------------------------
     // Rendering
-    // ---------------------------
     let currentUser = null;
     let unsubEntries = null;
     let unsubLeaderboards = null;
@@ -847,7 +1117,7 @@
         const ctx = document.getElementById(canvasId);
         return new Chart(ctx, {
             type: "line",
-            data: { labels, datasets: [{ label: "Kumuliert (EUR)", data: cumulative, tension: 0.25 }] },
+            data: { labels, datasets: [{ label: "Kumuliert", data: cumulative, tension: 0.25 }] },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -862,7 +1132,6 @@
 
     function renderTablesAndStats(allEntries){
         const eur = allEntries.filter(e => e.currency === "EUR");
-
         const cash = eur.filter(e => e.type === "cashgame");
         const tour = eur.filter(e => e.type === "tournament");
 
@@ -900,7 +1169,7 @@
           <td class="text-end ${amountClass(Number(e.amount||0))}">${formatEUR(Number(e.amount||0))}</td>
           <td class="small-muted">${escapeHtml(e.note||"")}</td>
           <td class="text-end">
-            <button class="btn btn-sm btn-outline-danger" data-del="${escapeHtml(e.id)}">Löschen</button>
+            <button class="btn btn-sm btn-outline-danger" data-del="${escapeHtml(e.id)}" type="button">Löschen</button>
           </td>
         </tr>
       `).join("") || `<tr><td colspan="4" class="small-muted">Noch keine Cashgame-Einträge.</td></tr>`;
@@ -914,7 +1183,7 @@
           <td class="text-end ${amountClass(Number(e.amount||0))}">${formatEUR(Number(e.amount||0))}</td>
           <td class="small-muted">${escapeHtml(e.note||"")}</td>
           <td class="text-end">
-            <button class="btn btn-sm btn-outline-danger" data-del="${escapeHtml(e.id)}">Löschen</button>
+            <button class="btn btn-sm btn-outline-danger" data-del="${escapeHtml(e.id)}" type="button">Löschen</button>
           </td>
         </tr>
       `).join("") || `<tr><td colspan="4" class="small-muted">Noch keine Turnier-Einträge.</td></tr>`;
@@ -945,21 +1214,61 @@
         }
     });
 
+    function renderPodium(slots, top3, key){
+        function slotHtml(rank, user){
+            if(!user){
+                return `
+          <div class="podium-rank" style="color: #fff;">#${rank}</div>
+          <img class="podium-avatar" src="${defaultAvatarDataUrl()}" alt="Profilbild">
+          <div class="podium-name small-muted" style="color: #fff;">—</div>
+          <div class="podium-value small-muted">0,00 €</div>
+        `;
+            }
+            const v = Number(user[key] || 0);
+            const photo = user.photoDataUrl || defaultAvatarDataUrl();
+            return `
+        <div class="podium-rank" style="color: #fff;">#${rank}</div>
+        <img class="podium-avatar" src="${escapeHtml(photo)}" alt="Profilbild">
+        <div class="podium-name" style="color: #fff;">${escapeHtml(user.username || "—")}</div>
+        <div class="podium-value ${amountClass(v)}">${formatEUR(v)}</div>
+      `;
+        }
+
+        // 2–1–3 Darstellung (Layout), Daten: top3[0]=#1, top3[1]=#2, top3[2]=#3
+        slots[1].innerHTML = slotHtml(1, top3[0] || null);
+        slots[2].innerHTML = slotHtml(2, top3[1] || null);
+        slots[3].innerHTML = slotHtml(3, top3[2] || null);
+    }
+
+    // Leaderboards + Performance (gegen alle anderen)
+    // Performance basiert auf TOTAL (totalEUR) vs alle User totalEUR
     function listenLeaderboards(){
         const qCash = query(collection(db, "users"), orderBy("cashgameTotalEUR", "desc"));
         const qTour = query(collection(db, "users"), orderBy("tournamentTotalEUR", "desc"));
+        const qTotal = query(collection(db, "users"), orderBy("totalEUR", "desc"));
 
         const unsubCash = onSnapshot(qCash, (snap) => {
-            let rank = 0;
-            const rows = snap.docs.slice(0, 50).map(d => {
-                const u = d.data();
-                if(!u.username) return "";
-                const v = Number(u.cashgameTotalEUR || 0);
+            const users = snap.docs
+                .map(d => ({ id: d.id, ...d.data() }))
+                .filter(u => !!u.username);
+
+            const top3 = users.slice(0, 3);
+            renderPodium({1: podiumCash1, 2: podiumCash2, 3: podiumCash3}, top3, "cashgameTotalEUR");
+
+            let rank = 3;
+            const rows = users.slice(3, 50).map(u => {
                 rank++;
+                const v = Number(u.cashgameTotalEUR || 0);
+                const photo = u.photoDataUrl || defaultAvatarDataUrl();
                 return `
           <tr>
             <td>${rank}</td>
-            <td class="fw-semibold">${escapeHtml(u.username)}</td>
+            <td>
+              <div class="d-flex align-items-center">
+                <img class="lb-avatar" src="${escapeHtml(photo)}" alt="Profilbild">
+                <div class="fw-semibold">${escapeHtml(u.username)}</div>
+              </div>
+            </td>
             <td class="text-end ${amountClass(v)}">${formatEUR(v)}</td>
           </tr>
         `;
@@ -967,20 +1276,31 @@
 
             tbodyLeaderboardCash.innerHTML = rows.trim()
                 ? rows
-                : `<tr><td colspan="3" class="small-muted">Noch keine Daten.</td></tr>`;
+                : `<tr><td colspan="3" class="small-muted">Keine weiteren Plätze (ab #4).</td></tr>`;
         });
 
         const unsubTour = onSnapshot(qTour, (snap) => {
-            let rank = 0;
-            const rows = snap.docs.slice(0, 50).map(d => {
-                const u = d.data();
-                if(!u.username) return "";
-                const v = Number(u.tournamentTotalEUR || 0);
+            const users = snap.docs
+                .map(d => ({ id: d.id, ...d.data() }))
+                .filter(u => !!u.username);
+
+            const top3 = users.slice(0, 3);
+            renderPodium({1: podiumTour1, 2: podiumTour2, 3: podiumTour3}, top3, "tournamentTotalEUR");
+
+            let rank = 3;
+            const rows = users.slice(3, 50).map(u => {
                 rank++;
+                const v = Number(u.tournamentTotalEUR || 0);
+                const photo = u.photoDataUrl || defaultAvatarDataUrl();
                 return `
           <tr>
             <td>${rank}</td>
-            <td class="fw-semibold">${escapeHtml(u.username)}</td>
+            <td>
+              <div class="d-flex align-items-center">
+                <img class="lb-avatar" src="${escapeHtml(photo)}" alt="Profilbild">
+                <div class="fw-semibold">${escapeHtml(u.username)}</div>
+              </div>
+            </td>
             <td class="text-end ${amountClass(v)}">${formatEUR(v)}</td>
           </tr>
         `;
@@ -988,15 +1308,128 @@
 
             tbodyLeaderboardTour.innerHTML = rows.trim()
                 ? rows
-                : `<tr><td colspan="3" class="small-muted">Noch keine Daten.</td></tr>`;
+                : `<tr><td colspan="3" class="small-muted">Keine weiteren Plätze (ab #4).</td></tr>`;
         });
 
-        return () => { unsubCash(); unsubTour(); };
+        // Performance: mein totalEUR vs alle anderen totalEUR
+        const unsubTotal = onSnapshot(qTotal, async (snap) => {
+            if(!currentUser){
+                kpiPerformance.textContent = "—";
+                return;
+            }
+
+            // Take totals only from users that actually have a username (optional, but usually desired)
+            const users = snap.docs
+                .map(d => ({ id: d.id, ...d.data() }))
+                .filter(u => !!u.username);
+
+            const totals = users.map(u => Number(u.totalEUR || 0));
+
+            // Get my total reliably (don’t depend on being in the same filtered list)
+            const myFresh = await getUserDoc(currentUser.uid);
+            const myTotal = Number(myFresh?.totalEUR || 0);
+
+            const r = performanceVsAll(totals, myTotal);
+            kpiPerformance.textContent = r.text;
+        });
+
+
+        return () => { unsubCash(); unsubTour(); unsubTotal(); };
     }
 
-    // ---------------------------
+    // Profile: open + file preview + save
+    btnOpenProfile.addEventListener("click", async () => {
+        profileMsg.textContent = "";
+        if(!currentUser) return;
+
+        const udoc = await getUserDoc(currentUser.uid);
+        profileUsername.value = udoc?.username || "";
+        profilePhotoFile.value = "";
+
+        setNavProfile(udoc?.username || "", udoc?.photoDataUrl || null);
+        profileModal.show();
+    });
+
+    let stagedPhotoDataUrl = null;
+    profilePhotoFile.addEventListener("change", async (e) => {
+        profileMsg.textContent = "";
+        stagedPhotoDataUrl = null;
+
+        const file = e.target.files?.[0];
+        if(!file) return;
+
+        if(!file.type.startsWith("image/")){
+            profileMsg.textContent = "Bitte eine Bilddatei auswählen.";
+            return;
+        }
+
+        try{
+            const dataUrl = await fileToResizedDataUrl(file, 256, 0.82);
+            stagedPhotoDataUrl = dataUrl;
+            profilePreview.src = stagedPhotoDataUrl;
+        }catch(err){
+            profileMsg.textContent = "Bild konnte nicht verarbeitet werden.";
+        }
+    });
+
+    btnSaveProfile.addEventListener("click", async () => {
+        profileMsg.textContent = "";
+        if(!currentUser) return;
+
+        const desiredUsername = (profileUsername.value || "").trim();
+        if(desiredUsername && !isValidUsername(desiredUsername)){
+            profileMsg.textContent = "Username ungültig (3–20 Zeichen, nur Buchstaben/Zahlen/_).";
+            return;
+        }
+
+        btnSaveProfile.disabled = true;
+        try{
+            await updateProfile(currentUser.uid, {
+                username: desiredUsername || null,
+                photoDataUrl: stagedPhotoDataUrl ?? undefined
+            });
+
+            const fresh = await getUserDoc(currentUser.uid);
+            setNavProfile(fresh?.username || "", fresh?.photoDataUrl || null);
+            whoAmI.textContent = `${fresh?.username || "(ohne username)"}`;
+
+            profileModal.hide();
+        }catch(err){
+            profileMsg.textContent = err?.message || "Speichern fehlgeschlagen.";
+        }finally{
+            btnSaveProfile.disabled = false;
+        }
+    });
+
+    // Resize helper
+    function fileToResizedDataUrl(file, maxSizePx = 256, quality = 0.82){
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = reject;
+            reader.onload = () => {
+                const img = new Image();
+                img.onerror = reject;
+                img.onload = () => {
+                    const ratio = Math.min(1, maxSizePx / Math.max(img.width, img.height));
+                    const w = Math.round(img.width * ratio);
+                    const h = Math.round(img.height * ratio);
+
+                    const canvas = document.createElement("canvas");
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, w, h);
+
+                    const dataUrl = canvas.toDataURL("image/jpeg", quality);
+                    resolve(dataUrl);
+                };
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
     // Auth State
-    // ---------------------------
     onAuthStateChanged(auth, async (user) => {
         currentUser = user || null;
 
@@ -1007,15 +1440,25 @@
             setAuthUI(false);
             whoAmI.textContent = "";
             authMsg.textContent = "";
+            kpiPerformance.textContent = "—";
 
             tbodyCash.innerHTML = "";
             tbodyTour.innerHTML = "";
             tbodyLeaderboardCash.innerHTML = "";
             tbodyLeaderboardTour.innerHTML = "";
 
+            podiumCash1.innerHTML = "";
+            podiumCash2.innerHTML = "";
+            podiumCash3.innerHTML = "";
+            podiumTour1.innerHTML = "";
+            podiumTour2.innerHTML = "";
+            podiumTour3.innerHTML = "";
+
+            navAvatar.src = defaultAvatarDataUrl();
+            navUsername.textContent = "Profil";
+
             if(cashChart){ cashChart.destroy(); cashChart = null; }
             if(tourChart){ tourChart.destroy(); tourChart = null; }
-
             return;
         }
 
@@ -1027,13 +1470,16 @@
             usernameInput.value = "";
             usernameError.textContent = "";
             setAuthUI(true);
+            setNavProfile("Profil", null);
             whoAmI.textContent = "Bitte Username festlegen, um fortzufahren.";
+            kpiPerformance.textContent = "—";
             usernameModal.show();
             return;
         }
 
         setAuthUI(true);
-        whoAmI.textContent = `Angemeldet als: ${udoc.username} (nur du kannst deine Daten ändern)`;
+        whoAmI.textContent = `${udoc.username}`;
+        setNavProfile(udoc.username, udoc.photoDataUrl || null);
 
         // Listen to all my entries once, then split into cash/tour in UI
         const qMine = query(collection(db, "users", user.uid, "entries"), orderBy("date", "asc"));
@@ -1041,7 +1487,7 @@
             const entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             renderTablesAndStats(entries);
 
-            // ensure header total reflects latest user doc quickly (optional)
+            // refresh header total from user doc
             const fresh = await getUserDoc(user.uid);
             const total = Number(fresh?.totalEUR || 0);
             kpiTotal.textContent = formatEUR(total);

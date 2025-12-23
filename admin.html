@@ -1,0 +1,1154 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zentrale – Admin</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root{ --card-radius: 18px; }
+        body{
+            background: radial-gradient(1200px 600px at 20% 0%, #1b3a2a 0%, rgba(27,58,42,0) 55%),
+            radial-gradient(1000px 500px at 80% 10%, #2a1b3a 0%, rgba(42,27,58,0) 55%),
+            #0b0f14;
+            color:#e9eef5;
+        }
+        .navbar{
+            backdrop-filter: blur(10px);
+            background: rgba(10, 14, 20, 0.65) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .card{
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.06);
+            border-radius: var(--card-radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        }
+        .form-control, .form-select{
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #e9eef5;
+        }
+        .form-control:focus, .form-select:focus{
+            box-shadow: 0 0 0 .25rem rgba(13,110,253,0.18);
+            border-color: rgba(13,110,253,0.55);
+        }
+        .table{ color:#e9eef5; }
+        .table thead th{
+            background: rgba(255,255,255,0.07);
+            border-bottom: 1px solid rgba(255,255,255,0.10);
+        }
+        .table tbody td{ border-color: rgba(255,255,255,0.10); }
+        .badge-soft{
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #e9eef5;
+        }
+        .small-muted{ color: rgba(233,238,245,0.72); }
+        .amount-pos{ color:#57e389; font-variant-numeric: tabular-nums; }
+        .amount-neg{ color:#ff6b6b; font-variant-numeric: tabular-nums; }
+        .amount-zero{ color:#cbd5e1; font-variant-numeric: tabular-nums; }
+        .modal-content{
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(12, 16, 22, 0.95);
+            border-radius: 18px;
+        }
+        .nav-pills .nav-link{ border-radius: 999px; }
+        .nav-pills .nav-link.active{ background: rgba(13,110,253,0.85); }
+        .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+
+        /* ---------- GLOBAL bleibt wie bisher (dark UI) ---------- */
+        body { color:#e9eef5; } /* schon bei dir */
+
+        /* Überschriften/Top-Texte: hell */
+        h1, h2, h3, h4, h5, h6 { color:#fff; }
+
+        /* ---------- TABLES: eigene "helle Fläche" mit dunkler Schrift ---------- */
+
+        /* Tabelle bekommt einen hellen Hintergrund, damit dunkle Schrift Sinn macht */
+        .table-responsive{
+            background: rgba(255,255,255,0.96);
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.10);
+        }
+
+        /* Tabelle selbst: dunkle Schrift */
+        .table{
+            color: #111 !important;
+            margin-bottom: 0;
+        }
+
+        /* Kopfzeile: etwas dunklerer Hellton */
+        .table thead th{
+            color: #111 !important;
+            background: rgba(0,0,0,0.04) !important;
+            border-bottom: 1px solid rgba(0,0,0,0.12) !important;
+        }
+
+        /* Zellen */
+        .table tbody td,
+        .table tbody th{
+            color:#111 !important;
+            border-color: rgba(0,0,0,0.08) !important;
+        }
+
+        /* Hover */
+        .table-hover tbody tr:hover{
+            background: rgba(0,0,0,0.03) !important;
+        }
+
+        /* muted Texte innerhalb Tabellen */
+        .table .small-muted{
+            color: rgba(0,0,0,0.65) !important;
+        }
+
+        /* Badge in Tabellen: dunkel lesbar */
+        .table .badge-soft{
+            background: rgba(0,0,0,0.06) !important;
+            border: 1px solid rgba(0,0,0,0.12) !important;
+            color: #111 !important;
+        }
+
+        /* P/L Farben (gut sichtbar auf hell) */
+        .table .amount-pos{ color:#137333 !important; }
+        .table .amount-neg{ color:#b3261e !important; }
+        .table .amount-zero{ color:#333 !important; }
+        /* ---------- BUTTONS IN TABLES: dunkel & lesbar ---------- */
+
+        /* Alle Buttons innerhalb von Tabellen */
+        .table button,
+        .table .btn{
+            color: #111 !important;
+            border-color: rgba(0,0,0,0.35) !important;
+            background: rgba(0,0,0,0.04) !important;
+        }
+
+        /* Hover */
+        .table .btn:hover{
+            background: rgba(0,0,0,0.10) !important;
+            color: #000 !important;
+        }
+
+        /* Outline-Light speziell neutralisieren */
+        .table .btn-outline-light{
+            color: #111 !important;
+            border-color: rgba(0,0,0,0.35) !important;
+            background: rgba(0,0,0,0.02) !important;
+        }
+
+        /* Primary Buttons in Tabellen (falls mal genutzt) */
+        .table .btn-primary{
+            background: #e9ecef !important;
+            border-color: #adb5bd !important;
+            color: #111 !important;
+        }
+
+        /* Danger Buttons (z. B. Löschen) */
+        .table .btn-outline-danger{
+            color: #b3261e !important;
+            border-color: rgba(179,38,30,0.6) !important;
+        }
+
+        .table .btn-outline-danger:hover{
+            background: rgba(179,38,30,0.08) !important;
+        }
+
+    </style>
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container py-2">
+        <a class="navbar-brand fw-semibold" href="#">Zentrale – Admin</a>
+
+        <div class="ms-auto d-flex gap-2 align-items-center">
+            <span class="badge badge-soft" id="authStatus">Nicht eingeloggt</span>
+            <button class="btn btn-sm btn-outline-light d-none" id="btnLogout" type="button">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<main class="container my-4">
+
+    <!-- LOGIN -->
+    <div id="loginArea" class="row g-3">
+        <div class="col-12 col-lg-6">
+            <div class="card p-3 p-md-4 h-100">
+                <h1 class="h4 mb-1">Admin Login</h1>
+                <div class="small-muted mb-3">Nur für Admin-Accounts. (E-Mail/Passwort oder Google via Firebase Auth)</div>
+
+                <form id="loginForm" class="row g-2">
+                    <div class="col-12">
+                        <label class="form-label small-muted mb-1">E-Mail</label>
+                        <input class="form-control" type="email" id="loginEmail" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small-muted mb-1">Passwort</label>
+                        <input class="form-control" type="password" id="loginPassword" required>
+                    </div>
+                    <div class="col-12 d-grid mt-2">
+                        <button class="btn btn-primary btn-lg" type="submit">Einloggen</button>
+                    </div>
+                </form>
+
+                <div class="d-grid mt-3">
+                    <button class="btn btn-outline-light btn-lg" id="btnGoogleAdmin" type="button">
+                        Mit Google einloggen
+                    </button>
+                </div>
+
+                <div class="small text-danger mt-3" id="loginMsg"></div>
+
+                <hr class="border border-light border-opacity-10 my-3">
+
+                <div class="small-muted">
+                    Admin-Rechte werden über eine Allowlist geprüft:
+                    <span class="mono">config/admins</span> mit Feld <span class="mono">uids: ["..."]</span>.
+                    <br>
+                    Hinweis: Für lokalen Test muss <span class="mono">localhost</span> als Authorized Domain in Firebase Auth erlaubt sein.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN APP -->
+    <div id="adminArea" class="d-none">
+
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <div class="card p-3 p-md-4">
+                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                        <div>
+                            <h1 class="h3 mb-1" style="color:#fff;">Admin Panel</h1>
+                            <div class="small-muted" id="adminWhoAmI"></div>
+                        </div>
+                        <span class="badge badge-soft" id="adminBadge">Admin</span>
+                    </div>
+
+                    <hr class="border border-light border-opacity-10 my-3">
+
+                    <ul class="nav nav-pills gap-2" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tabUsers" type="button" role="tab">
+                                Spieler
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabEntries" type="button" role="tab">
+                                Alle Einträge
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabLeaderboards" type="button" role="tab">
+                                Leaderboards
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content">
+
+            <!-- USERS TAB -->
+            <div class="tab-pane fade show active" id="tabUsers" role="tabpanel">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-5">
+                        <div class="card p-3 p-md-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h2 class="h5 mb-0" style="color:#fff;">Spieler (Users)</h2>
+                                    <div class="small-muted">Wähle einen Spieler aus, um dessen Einträge zu verwalten.</div>
+                                </div>
+                                <span class="badge badge-soft" id="userCount">0</span>
+                            </div>
+
+                            <hr class="border border-light border-opacity-10 my-3">
+
+                            <input class="form-control form-control-sm mb-2" id="userSearch" placeholder="Suche (username, uid) …">
+
+                            <div style="max-height: 520px; overflow:auto;">
+                                <ul class="list-group list-group-flush" id="userList"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-7">
+                        <div class="card p-3 p-md-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h2 class="h5 mb-0" style="color:#fff;">Ausgewählter Spieler</h2>
+                                    <div class="small-muted" id="selectedUserInfo">Noch kein Spieler ausgewählt.</div>
+                                </div>
+                                <button class="btn btn-outline-light btn-sm" id="btnRecompute" type="button" disabled>
+                                    Totals neu berechnen
+                                </button>
+                            </div>
+
+                            <hr class="border border-light border-opacity-10 my-3">
+
+                            <div class="row g-3">
+                                <div class="col-12 col-md-4">
+                                    <div class="small-muted">Gesamt (EUR)</div>
+                                    <div class="h4 mb-0" id="uTotal">0,00 €</div>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <div class="small-muted">Cashgame (EUR)</div>
+                                    <div class="h4 mb-0" id="uCash">0,00 €</div>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <div class="small-muted">Turnier (EUR)</div>
+                                    <div class="h4 mb-0" id="uTour">0,00 €</div>
+                                </div>
+                            </div>
+
+                            <hr class="border border-light border-opacity-10 my-3">
+
+                            <h3 class="h6 mb-2" style="color:#fff;">Admin-Eintrag hinzufügen (für ausgewählten Spieler)</h3>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-12 col-md-4">
+                                    <label class="form-label small-muted mb-1">Datum</label>
+                                    <input class="form-control" type="date" id="adminAddDate">
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <label class="form-label small-muted mb-1">Typ</label>
+                                    <select class="form-select" id="adminAddType">
+                                        <option value="cashgame">Cashgame</option>
+                                        <option value="tournament">Turnier</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <label class="form-label small-muted mb-1">Betrag (EUR)</label>
+                                    <input class="form-control" type="number" step="0.01" id="adminAddAmount" placeholder="z.B. 25 oder -10">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small-muted mb-1">Notiz</label>
+                                    <input class="form-control" id="adminAddNote" maxlength="120" placeholder="z.B. korrigiert durch Admin …">
+                                </div>
+                                <div class="col-12 d-grid">
+                                    <button class="btn btn-primary" id="btnAdminAddEntry" type="button" disabled>Eintrag hinzufügen</button>
+                                </div>
+                                <div class="small text-danger" id="adminAddMsg"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ENTRIES TAB -->
+            <div class="tab-pane fade" id="tabEntries" role="tabpanel">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="card p-3 p-md-4">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h2 class="h5 mb-0" style="color:#fff;">Alle Einträge (collectionGroup)</h2>
+                                    <div class="small-muted">Admin-Übersicht über alle User-Einträge (EUR).</div>
+                                </div>
+
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <select class="form-select form-select-sm" id="filterType" style="min-width: 170px;">
+                                        <option value="all" selected>Alle Typen</option>
+                                        <option value="cashgame">Nur Cashgame</option>
+                                        <option value="tournament">Nur Turnier</option>
+                                    </select>
+
+                                    <input class="form-control form-control-sm" id="entrySearch" placeholder="Suche (username, note, uid) …" style="min-width: 260px;">
+                                </div>
+                            </div>
+
+                            <hr class="border border-light border-opacity-10 my-3">
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>Datum</th>
+                                        <th>User</th>
+                                        <th>Typ</th>
+                                        <th class="text-end">Betrag (EUR)</th>
+                                        <th>Notiz</th>
+                                        <th class="text-end">Aktion</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tbodyAllEntries"></tbody>
+                                </table>
+                            </div>
+
+                            <div class="small-muted mt-2">
+                                Hinweis: Für sehr große Datenmengen solltest du paginieren; hier ist es als Admin-Übersicht gedacht.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LEADERBOARDS TAB -->
+            <div class="tab-pane fade" id="tabLeaderboards" role="tabpanel">
+                <div class="row g-3">
+
+                    <div class="col-12 col-lg-6">
+                        <div class="card p-3 p-md-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h2 class="h5 mb-0" style="color:#fff;">Leaderboard – Cashgame (EUR)</h2>
+                                    <div class="small-muted">Sortiert nach cashgameTotalEUR.</div>
+                                </div>
+                                <span class="badge badge-soft">Top 50</span>
+                            </div>
+
+                            <hr class="border border-light border-opacity-10 my-3">
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Username</th>
+                                        <th class="text-end">Cashgame</th>
+                                        <th class="text-end">Aktion</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tbodyLbCash"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <div class="card p-3 p-md-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h2 class="h5 mb-0" style="color:#fff;">Leaderboard – Turnier (EUR)</h2>
+                                    <div class="small-muted">Sortiert nach tournamentTotalEUR.</div>
+                                </div>
+                                <span class="badge badge-soft">Top 50</span>
+                            </div>
+
+                            <hr class="border border-light border-opacity-10 my-3">
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Username</th>
+                                        <th class="text-end">Turnier</th>
+                                        <th class="text-end">Aktion</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tbodyLbTour"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="small-muted">
+                            Admin kann per „Totals neu berechnen“ (bei User-Auswahl) inkonsistente Werte korrigieren.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div><!-- /tab-content -->
+    </div><!-- /adminArea -->
+
+</main>
+
+<!-- EDIT MODAL -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-light">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Eintrag bearbeiten</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Schließen"></button>
+            </div>
+            <div class="modal-body">
+                <div class="small-muted mb-2" id="editMeta"></div>
+
+                <div class="row g-2">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small-muted mb-1">Datum</label>
+                        <input class="form-control" type="date" id="editDate">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small-muted mb-1">Typ</label>
+                        <select class="form-select" id="editType">
+                            <option value="cashgame">Cashgame</option>
+                            <option value="tournament">Turnier</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small-muted mb-1">Betrag (EUR)</label>
+                        <input class="form-control" type="number" step="0.01" id="editAmount">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small-muted mb-1">Notiz</label>
+                        <input class="form-control" id="editNote" maxlength="200">
+                    </div>
+                </div>
+
+                <div class="small text-danger mt-2" id="editMsg"></div>
+            </div>
+            <div class="modal-footer border-0 d-flex justify-content-between">
+                <button class="btn btn-outline-danger" id="btnDeleteEntry" type="button">Löschen</button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-light" data-bs-dismiss="modal" type="button">Abbrechen</button>
+                    <button class="btn btn-primary" id="btnSaveEntry" type="button">Speichern</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script type="module">
+    // Firebase imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import {
+        getAuth, onAuthStateChanged, signOut,
+        signInWithEmailAndPassword,
+        GoogleAuthProvider, signInWithPopup
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import {
+        getFirestore, doc, getDoc, setDoc, updateDoc,
+        collection, collectionGroup, addDoc, deleteDoc,
+        query, orderBy, limit, onSnapshot, getDocs,
+        serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+    // ---------------------------------------------------------
+    // Firebase Config (deins – identisch wie in index.html)
+    // ---------------------------------------------------------
+    const firebaseConfig = {
+        apiKey: "AIzaSyASN7beVlrbMtUwMr4BKfSx1EmUQZJAfNk",
+        authDomain: "zentrale-ee675.firebaseapp.com",
+        projectId: "zentrale-ee675",
+        storageBucket: "zentrale-ee675.firebasestorage.app",
+        messagingSenderId: "1091342474994",
+        appId: "1:1091342474994:web:29ff79685bbd4e5077fa6b",
+        measurementId: "G-S805TDBQCQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ---------------------------------------------------------
+    // DOM
+    // ---------------------------------------------------------
+    const loginArea = document.getElementById("loginArea");
+    const adminArea = document.getElementById("adminArea");
+    const authStatus = document.getElementById("authStatus");
+    const btnLogout = document.getElementById("btnLogout");
+    const loginMsg = document.getElementById("loginMsg");
+
+    const loginForm = document.getElementById("loginForm");
+    const loginEmail = document.getElementById("loginEmail");
+    const loginPassword = document.getElementById("loginPassword");
+    const btnGoogleAdmin = document.getElementById("btnGoogleAdmin");
+
+    const adminWhoAmI = document.getElementById("adminWhoAmI");
+
+    const userCount = document.getElementById("userCount");
+    const userSearch = document.getElementById("userSearch");
+    const userList = document.getElementById("userList");
+
+    const selectedUserInfo = document.getElementById("selectedUserInfo");
+    const btnRecompute = document.getElementById("btnRecompute");
+
+    const uTotal = document.getElementById("uTotal");
+    const uCash = document.getElementById("uCash");
+    const uTour = document.getElementById("uTour");
+
+    const adminAddDate = document.getElementById("adminAddDate");
+    const adminAddType = document.getElementById("adminAddType");
+    const adminAddAmount = document.getElementById("adminAddAmount");
+    const adminAddNote = document.getElementById("adminAddNote");
+    const btnAdminAddEntry = document.getElementById("btnAdminAddEntry");
+    const adminAddMsg = document.getElementById("adminAddMsg");
+
+    const filterType = document.getElementById("filterType");
+    const entrySearch = document.getElementById("entrySearch");
+    const tbodyAllEntries = document.getElementById("tbodyAllEntries");
+
+    const tbodyLbCash = document.getElementById("tbodyLbCash");
+    const tbodyLbTour = document.getElementById("tbodyLbTour");
+
+    // Edit modal
+    const editModalEl = document.getElementById("editModal");
+    const editModal = new window.bootstrap.Modal(editModalEl);
+    const editMeta = document.getElementById("editMeta");
+    const editDate = document.getElementById("editDate");
+    const editType = document.getElementById("editType");
+    const editAmount = document.getElementById("editAmount");
+    const editNote = document.getElementById("editNote");
+    const editMsg = document.getElementById("editMsg");
+    const btnSaveEntry = document.getElementById("btnSaveEntry");
+    const btnDeleteEntry = document.getElementById("btnDeleteEntry");
+
+    // ---------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------
+    const fmt = new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formatEUR = (n) => `${fmt.format(Number(n || 0))} €`;
+
+    function amountClass(amount){
+        amount = Number(amount || 0);
+        if(amount > 0) return "amount-pos";
+        if(amount < 0) return "amount-neg";
+        return "amount-zero";
+    }
+
+    function escapeHtml(str){
+        return (str ?? "").toString()
+            .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+            .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    }
+
+    function todayISO(){ return new Date().toISOString().slice(0,10); }
+    adminAddDate.value = todayISO();
+
+    function setUI(loggedIn){
+        loginArea.classList.toggle("d-none", loggedIn);
+        adminArea.classList.toggle("d-none", !loggedIn);
+        btnLogout.classList.toggle("d-none", !loggedIn);
+        authStatus.textContent = loggedIn ? "Eingeloggt" : "Nicht eingeloggt";
+    }
+
+    // ---------------------------------------------------------
+    // Admin Allowlist: config/admins { uids: ["uid1","uid2"] }
+    // ---------------------------------------------------------
+    async function isAdminUid(uid){
+        const ref = doc(db, "admins", uid);
+        const snap = await getDoc(ref);
+        return snap.exists();
+    }
+
+
+    // ---------------------------------------------------------
+    // Auth (Email/Passwort + Google)
+    // ---------------------------------------------------------
+    loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        loginMsg.textContent = "";
+        try{
+            await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPassword.value);
+        }catch(err){
+            loginMsg.textContent = err?.message || "Login fehlgeschlagen.";
+        }
+    });
+
+    btnGoogleAdmin.addEventListener("click", async () => {
+        loginMsg.textContent = "";
+        try{
+            const provider = new GoogleAuthProvider();
+            // Optional: immer Account-Auswahl anzeigen
+            provider.setCustomParameters({ prompt: "select_account" });
+            await signInWithPopup(auth, provider);
+        }catch(err){
+            loginMsg.textContent = err?.message || "Google Login fehlgeschlagen.";
+        }
+    });
+
+    btnLogout.addEventListener("click", async () => {
+        await signOut(auth);
+    });
+
+    // ---------------------------------------------------------
+    // Data state/subscriptions
+    // ---------------------------------------------------------
+    let currentUser = null;
+    let unsubUsers = null;
+    let unsubAllEntries = null;
+    let unsubLbCash = null;
+    let unsubLbTour = null;
+
+    let selectedUid = null;
+    let selectedUser = null;
+
+    // edit modal state
+    let editUid = null;
+    let editEntryId = null;
+
+    // cache: uid -> username
+    const usernameByUid = new Map();
+
+    // ---------------------------------------------------------
+    // Totals recompute for a given uid
+    // ---------------------------------------------------------
+    async function recomputeAndWriteTotalsEUR(uid){
+        const entriesSnap = await getDocs(collection(db, "users", uid, "entries"));
+        let total=0, t=0, c=0, count=0;
+
+        entriesSnap.forEach(d => {
+            const e = d.data();
+            if(e.currency !== "EUR") return;
+            const amt = Number(e.amount || 0);
+            total += amt;
+            if(e.type === "tournament") t += amt;
+            if(e.type === "cashgame") c += amt;
+            count++;
+        });
+
+        await setDoc(doc(db, "users", uid), {
+            totalEUR: total,
+            tournamentTotalEUR: t,
+            cashgameTotalEUR: c,
+            entriesCountEUR: count,
+            updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        return { total, t, c, count };
+    }
+
+    // ---------------------------------------------------------
+    // Render: users list
+    // ---------------------------------------------------------
+    let lastUsersSnapshot = [];
+    function renderUsersList(users){
+        lastUsersSnapshot = users;
+
+        const q = (userSearch.value || "").trim().toLowerCase();
+        const filtered = users.filter(u => {
+            const uname = (u.username || "").toLowerCase();
+            const uid = (u.uid || "").toLowerCase();
+            return !q || uname.includes(q) || uid.includes(q);
+        });
+
+        userCount.textContent = String(filtered.length);
+
+        userList.innerHTML = filtered.map(u => {
+            const active = (u.uid === selectedUid) ? "border border-primary border-opacity-50" : "";
+            return `
+        <li class="list-group-item bg-transparent text-light border-0 px-0">
+          <button class="btn btn-outline-light w-100 text-start ${active}"
+                  data-select-user="${escapeHtml(u.uid)}" type="button">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-semibold">${escapeHtml(u.username || "(ohne username)")}</div>
+                <div class="small-muted mono">${escapeHtml(u.uid)}</div>
+              </div>
+              <span class="badge badge-soft">${escapeHtml(String(u.entriesCountEUR ?? ""))} Einträge</span>
+            </div>
+          </button>
+        </li>
+      `;
+        }).join("");
+    }
+
+    userSearch.addEventListener("input", () => renderUsersList(lastUsersSnapshot));
+
+    function renderSelectedUserPanel(u){
+        if(!u){
+            selectedUserInfo.textContent = "Noch kein Spieler ausgewählt.";
+            uTotal.textContent = formatEUR(0);
+            uCash.textContent = formatEUR(0);
+            uTour.textContent = formatEUR(0);
+            btnRecompute.disabled = true;
+            btnAdminAddEntry.disabled = true;
+            return;
+        }
+
+        selectedUserInfo.innerHTML = `
+      <span class="fw-semibold">${escapeHtml(u.username || "(ohne username)")}</span>
+      <span class="small-muted"> • UID:</span> <span class="mono">${escapeHtml(u.uid)}</span>
+    `;
+
+        uTotal.textContent = formatEUR(u.totalEUR || 0);
+        uTotal.className = "h4 mb-0 " + amountClass(u.totalEUR || 0);
+
+        uCash.textContent = formatEUR(u.cashgameTotalEUR || 0);
+        uCash.className = "h4 mb-0 " + amountClass(u.cashgameTotalEUR || 0);
+
+        uTour.textContent = formatEUR(u.tournamentTotalEUR || 0);
+        uTour.className = "h4 mb-0 " + amountClass(u.tournamentTotalEUR || 0);
+
+        btnRecompute.disabled = false;
+        btnAdminAddEntry.disabled = false;
+    }
+
+    async function refreshSelectedUserDoc(){
+        if(!selectedUid) return;
+        const snap = await getDoc(doc(db, "users", selectedUid));
+        const data = snap.exists() ? snap.data() : {};
+        selectedUser = { uid: selectedUid, ...data };
+        usernameByUid.set(selectedUid, selectedUser.username || "");
+        renderSelectedUserPanel(selectedUser);
+    }
+
+    // ---------------------------------------------------------
+    // Admin add entry for selected user
+    // ---------------------------------------------------------
+    btnAdminAddEntry.addEventListener("click", async () => {
+        adminAddMsg.textContent = "";
+        if(!selectedUid) return;
+
+        const date = adminAddDate.value;
+        const type = adminAddType.value;
+        const amount = Math.round(Number(adminAddAmount.value) * 100) / 100;
+        const note = (adminAddNote.value || "").trim();
+
+        if(!date || Number.isNaN(amount)){
+            adminAddMsg.textContent = "Bitte Datum und Betrag korrekt ausfüllen.";
+            return;
+        }
+
+        try{
+            await addDoc(collection(db, "users", selectedUid, "entries"), {
+                date,
+                type,
+                amount,
+                currency: "EUR",
+                note,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                adminEdited: true
+            });
+
+            adminAddAmount.value = "";
+            adminAddNote.value = "";
+
+            await recomputeAndWriteTotalsEUR(selectedUid);
+            await refreshSelectedUserDoc();
+        }catch(err){
+            adminAddMsg.textContent = err?.message || "Speichern fehlgeschlagen.";
+        }
+    });
+
+    btnRecompute.addEventListener("click", async () => {
+        if(!selectedUid) return;
+        btnRecompute.disabled = true;
+        try{
+            await recomputeAndWriteTotalsEUR(selectedUid);
+            await refreshSelectedUserDoc();
+        }finally{
+            btnRecompute.disabled = false;
+        }
+    });
+
+    // ---------------------------------------------------------
+    // All entries (collectionGroup) + filter/search client-side
+    // ---------------------------------------------------------
+    let allEntriesCache = [];
+    function renderAllEntriesTable(){
+        const typeF = filterType.value;
+        const q = (entrySearch.value || "").trim().toLowerCase();
+
+        let rows = allEntriesCache.slice();
+        if(typeF !== "all") rows = rows.filter(e => e.type === typeF);
+
+        if(q){
+            rows = rows.filter(e => {
+                const uname = (usernameByUid.get(e.uid) || "").toLowerCase();
+                const note = (e.note || "").toLowerCase();
+                const uid = (e.uid || "").toLowerCase();
+                return uname.includes(q) || note.includes(q) || uid.includes(q);
+            });
+        }
+
+        tbodyAllEntries.innerHTML = rows.map(e => {
+            const uname = usernameByUid.get(e.uid) || "(unbekannt)";
+            const amount = Number(e.amount || 0);
+            return `
+        <tr>
+          <td>${escapeHtml(e.date || "")}</td>
+          <td>
+            <div class="fw-semibold">${escapeHtml(uname)}</div>
+            <div class="small-muted mono">${escapeHtml(e.uid)}</div>
+          </td>
+          <td><span class="badge badge-soft">${escapeHtml(e.type)}</span></td>
+          <td class="text-end ${amountClass(amount)}">${formatEUR(amount)}</td>
+          <td class="small-muted">${escapeHtml(e.note || "")}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-light"
+                    data-edit-uid="${escapeHtml(e.uid)}"
+                    data-edit-id="${escapeHtml(e.entryId)}"
+                    type="button">
+              Bearbeiten
+            </button>
+          </td>
+        </tr>
+      `;
+        }).join("") || `<tr><td colspan="6" class="small-muted">Keine Einträge gefunden.</td></tr>`;
+    }
+
+    filterType.addEventListener("change", renderAllEntriesTable);
+    entrySearch.addEventListener("input", renderAllEntriesTable);
+
+    // ---------------------------------------------------------
+    // Edit modal open/save/delete
+    // ---------------------------------------------------------
+    document.addEventListener("click", async (e) => {
+        const btn = e.target.closest("button[data-edit-uid]");
+        if(!btn) return;
+
+        editMsg.textContent = "";
+        editUid = btn.getAttribute("data-edit-uid");
+        editEntryId = btn.getAttribute("data-edit-id");
+        if(!editUid || !editEntryId) return;
+
+        const ref = doc(db, "users", editUid, "entries", editEntryId);
+        const snap = await getDoc(ref);
+        if(!snap.exists()){
+            alert("Eintrag nicht gefunden.");
+            return;
+        }
+        const data = snap.data();
+
+        const uname = usernameByUid.get(editUid) || "(unbekannt)";
+        editMeta.innerHTML = `User: <span class="fw-semibold">${escapeHtml(uname)}</span> • UID: <span class="mono">${escapeHtml(editUid)}</span>`;
+
+        editDate.value = data.date || "";
+        editType.value = (data.type === "tournament") ? "tournament" : "cashgame";
+        editAmount.value = Number(data.amount || 0);
+        editNote.value = data.note || "";
+
+        editModal.show();
+    });
+
+    btnSaveEntry.addEventListener("click", async () => {
+        editMsg.textContent = "";
+        if(!editUid || !editEntryId) return;
+
+        const date = editDate.value;
+        const type = editType.value;
+        const amount = Math.round(Number(editAmount.value) * 100) / 100;
+        const note = (editNote.value || "").trim();
+
+        if(!date || Number.isNaN(amount)){
+            editMsg.textContent = "Bitte Datum und Betrag korrekt ausfüllen.";
+            return;
+        }
+
+        try{
+            await updateDoc(doc(db, "users", editUid, "entries", editEntryId), {
+                date,
+                type,
+                amount,
+                note,
+                currency: "EUR",
+                updatedAt: serverTimestamp(),
+                adminEdited: true
+            });
+
+            await recomputeAndWriteTotalsEUR(editUid);
+            if(selectedUid === editUid) await refreshSelectedUserDoc();
+
+            editModal.hide();
+        }catch(err){
+            editMsg.textContent = err?.message || "Speichern fehlgeschlagen.";
+        }
+    });
+
+    btnDeleteEntry.addEventListener("click", async () => {
+        if(!editUid || !editEntryId) return;
+        if(!confirm("Eintrag wirklich löschen?")) return;
+
+        try{
+            await deleteDoc(doc(db, "users", editUid, "entries", editEntryId));
+            await recomputeAndWriteTotalsEUR(editUid);
+            if(selectedUid === editUid) await refreshSelectedUserDoc();
+            editModal.hide();
+        }catch(err){
+            editMsg.textContent = err?.message || "Löschen fehlgeschlagen.";
+        }
+    });
+
+    // ---------------------------------------------------------
+    // Leaderboards (two lists)
+    // ---------------------------------------------------------
+    function listenLeaderboards(){
+        const qCash = query(collection(db, "users"), orderBy("cashgameTotalEUR", "desc"), limit(50));
+        const qTour = query(collection(db, "users"), orderBy("tournamentTotalEUR", "desc"), limit(50));
+
+        unsubLbCash = onSnapshot(qCash, (snap) => {
+            let rank = 0;
+            const rows = snap.docs.map(d => {
+                const u = d.data();
+                if(!u.username) return "";
+                rank++;
+                const uid = d.id;
+                usernameByUid.set(uid, u.username);
+                const v = Number(u.cashgameTotalEUR || 0);
+
+                return `
+          <tr>
+            <td>${rank}</td>
+            <td class="fw-semibold">${escapeHtml(u.username)}</td>
+            <td class="text-end ${amountClass(v)}">${formatEUR(v)}</td>
+            <td class="text-end">
+              <button class="btn btn-sm btn-outline-light" data-select-user="${escapeHtml(uid)}" type="button">
+                Öffnen
+              </button>
+            </td>
+          </tr>
+        `;
+            }).join("");
+
+            tbodyLbCash.innerHTML = rows.trim()
+                ? rows
+                : `<tr><td colspan="4" class="small-muted">Noch keine Daten.</td></tr>`;
+        });
+
+        unsubLbTour = onSnapshot(qTour, (snap) => {
+            let rank = 0;
+            const rows = snap.docs.map(d => {
+                const u = d.data();
+                if(!u.username) return "";
+                rank++;
+                const uid = d.id;
+                usernameByUid.set(uid, u.username);
+                const v = Number(u.tournamentTotalEUR || 0);
+
+                return `
+          <tr>
+            <td>${rank}</td>
+            <td class="fw-semibold">${escapeHtml(u.username)}</td>
+            <td class="text-end ${amountClass(v)}">${formatEUR(v)}</td>
+            <td class="text-end">
+              <button class="btn btn-sm btn-outline-light" data-select-user="${escapeHtml(uid)}" type="button">
+                Öffnen
+              </button>
+            </td>
+          </tr>
+        `;
+            }).join("");
+
+            tbodyLbTour.innerHTML = rows.trim()
+                ? rows
+                : `<tr><td colspan="4" class="small-muted">Noch keine Daten.</td></tr>`;
+        });
+    }
+
+    // ---------------------------------------------------------
+    // User selection click (from user list or leaderboards)
+    // ---------------------------------------------------------
+    document.addEventListener("click", async (e) => {
+        const btn = e.target.closest("button[data-select-user]");
+        if(!btn) return;
+        const uid = btn.getAttribute("data-select-user");
+        if(!uid) return;
+
+        selectedUid = uid;
+        await refreshSelectedUserDoc();
+        // highlight selection in list (re-render)
+        renderUsersList(lastUsersSnapshot);
+    });
+
+    // ---------------------------------------------------------
+    // Start/stop listeners
+    // ---------------------------------------------------------
+    function startAdminListeners(){
+        unsubUsers = onSnapshot(query(collection(db, "users"), orderBy("username", "asc")), (snap) => {
+            const users = snap.docs.map(d => {
+                const data = d.data();
+                usernameByUid.set(d.id, data.username || "");
+                return { uid: d.id, ...data };
+            });
+            renderUsersList(users);
+
+            if(selectedUid){
+                const match = users.find(u => u.uid === selectedUid);
+                if(match){
+                    selectedUser = match;
+                    renderSelectedUserPanel(selectedUser);
+                }
+            }
+        });
+
+        unsubAllEntries = onSnapshot(
+            query(collectionGroup(db, "entries"), orderBy("date", "desc"), limit(300)),
+            (snap) => {
+                allEntriesCache = snap.docs.map(d => {
+                    const parts = d.ref.path.split("/");
+                    const uid = parts[1];
+                    const entryId = d.id;
+                    const data = d.data();
+                    return {
+                        uid,
+                        entryId,
+                        date: data.date || "",
+                        type: data.type || "",
+                        amount: Number(data.amount || 0),
+                        currency: data.currency || "",
+                        note: data.note || ""
+                    };
+                });
+                renderAllEntriesTable();
+            },
+            (err) => {
+                console.error("Alle Einträge onSnapshot Fehler:", err);
+                tbodyAllEntries.innerHTML =
+                    `<tr><td colspan="6" class="text-danger">
+        Fehler beim Laden: ${escapeHtml(err.message || String(err))}
+      </td></tr>`;
+            }
+        );
+
+
+        listenLeaderboards();
+    }
+
+    function stopAdminListeners(){
+        if(unsubUsers){ unsubUsers(); unsubUsers = null; }
+        if(unsubAllEntries){ unsubAllEntries(); unsubAllEntries = null; }
+        if(unsubLbCash){ unsubLbCash(); unsubLbCash = null; }
+        if(unsubLbTour){ unsubLbTour(); unsubLbTour = null; }
+
+        allEntriesCache = [];
+        selectedUid = null;
+        selectedUser = null;
+        renderSelectedUserPanel(null);
+
+        tbodyAllEntries.innerHTML = "";
+        tbodyLbCash.innerHTML = "";
+        tbodyLbTour.innerHTML = "";
+        userList.innerHTML = "";
+    }
+
+    // ---------------------------------------------------------
+    // Auth state: allow only admins
+    // ---------------------------------------------------------
+    onAuthStateChanged(auth, async (user) => {
+        currentUser = user || null;
+        loginMsg.textContent = "";
+
+        stopAdminListeners();
+
+        if(!user){
+            setUI(false);
+            adminWhoAmI.textContent = "";
+            return;
+        }
+
+        const ok = await isAdminUid(user.uid);
+        if(!ok){
+            setUI(false);
+            adminWhoAmI.textContent = "";
+            loginMsg.textContent = "Kein Admin-Zugriff für diesen Account.";
+            await signOut(auth);
+            return;
+        }
+
+        setUI(true);
+
+        const ident = user.email ? escapeHtml(user.email) : escapeHtml(user.displayName || "Google-User");
+        adminWhoAmI.innerHTML =
+            `Angemeldet als <span class="fw-semibold">${ident}</span> • UID: <span class="mono">${escapeHtml(user.uid)}</span>`;
+
+        renderSelectedUserPanel(null);
+        startAdminListeners();
+    });
+</script>
+</body>
+</html>
