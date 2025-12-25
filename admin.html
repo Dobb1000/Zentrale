@@ -197,7 +197,12 @@
 
         <div class="ms-auto d-flex gap-2 align-items-center">
             <span class="badge badge-soft" id="authStatus">Nicht eingeloggt</span>
-            <button class="btn btn-sm btn-outline-light d-none" id="btnLogout" type="button">Logout</button>
+            <a href="./index.html" class="btn btn-sm btn-outline-light d-none" id="btnBackToApp">
+                Zur App
+            </a>
+            <button class="btn btn-sm btn-outline-light d-none" id="btnLogout" type="button">
+                Logout
+            </button>
         </div>
     </div>
 </nav>
@@ -1125,6 +1130,7 @@
             adminWhoAmI.textContent = "";
             loginMsg.textContent = "Kein Admin-Zugriff für diesen Account.";
             await signOut(auth);
+            document.getElementById("btnBackToApp").classList.add("d-none");
             return;
         }
 
@@ -1136,6 +1142,9 @@
 
         renderSelectedUserPanel(null);
         startAdminListeners();
+
+
+        document.getElementById("btnBackToApp").classList.remove("d-none");
     });
 </script>
 </body>

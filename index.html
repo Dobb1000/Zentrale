@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Zentrale</title>
 
+    <link rel="manifest" href="./manifest.webmanifest">
+    <meta name="theme-color" content="#0b0f14">
+
+    <!-- iOS (optional aber empfohlen) -->
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -188,6 +197,12 @@
                     <span id="navUsername" class="d-none d-sm-inline">Profil</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item d-none" id="adminLink" href="./admin.html">
+                            Admin Panel
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
                     <li><button class="dropdown-item" id="btnOpenProfile" type="button">Profil bearbeiten</button></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><button class="dropdown-item text-danger" id="btnLogout" type="button">Logout</button></li>
@@ -562,6 +577,41 @@
                         </div>
                     </div>
 
+                    <!-- Total / Gesamt Leaderboard -->
+                    <div class="col-12">
+                        <div class="card p-3 p-md-4">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <h2 class="h5 mb-0" style="color:#fff;">Leaderboard – Gesamt</h2>
+                                </div>
+                                <span class="badge badge-soft">Top 50</span>
+                            </div>
+
+                            <hr class="border border-light border-opacity-10 my-3">
+
+                            <!-- Podium Total -->
+                            <div class="podium">
+                                <div class="podium-step step-2" id="podiumTotal2"></div>
+                                <div class="podium-step step-1" id="podiumTotal1"></div>
+                                <div class="podium-step step-3" id="podiumTotal3"></div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Spieler</th>
+                                        <th class="text-end">Gesamt</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tbodyLeaderboardTotal"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+
                     <div class="col-12">
                         <div class="small-muted"></div>
                     </div>
@@ -709,6 +759,19 @@
     const podiumTour1 = document.getElementById("podiumTour1");
     const podiumTour2 = document.getElementById("podiumTour2");
     const podiumTour3 = document.getElementById("podiumTour3");
+
+
+
+    const tbodyLeaderboardTotal = document.getElementById("tbodyLeaderboardTotal");
+    const podiumTotal1 = document.getElementById("podiumTotal1");
+    const podiumTotal2 = document.getElementById("podiumTotal2");
+    const podiumTotal3 = document.getElementById("podiumTotal3");
+
+    const qCash = query(collection(db, "users"), orderBy("cashgameTotalEUR", "desc"));
+    const qTour = query(collection(db, "users"), orderBy("tournamentTotalEUR", "desc"));
+    const qTotal = query(collection(db, "users"), orderBy("totalEUR", "desc"));
+
+
 
     // Username modal
     const usernameModalEl = document.getElementById("usernameModal");
@@ -870,6 +933,13 @@
             }, { merge: true });
         }
     }
+
+    async function isAdminUid(uid){
+        const ref = doc(db, "admins", uid);
+        const snap = await getDoc(ref);
+        return snap.exists();
+    }
+
 
     async function getUserDoc(uid){
         const ref = doc(db, "users", uid);
@@ -1314,6 +1384,39 @@
                 : `<tr><td colspan="3" class="small-muted">Keine weiteren Plätze (ab #4).</td></tr>`;
         });
 
+        const unsubTotalBoard = onSnapshot(qTotal, (snap) => {
+            const users = snap.docs
+                .map(d => ({ id: d.id, ...d.data() }))
+                .filter(u => !!u.username);
+
+            const top3 = users.slice(0, 3);
+            renderPodium({1: podiumTotal1, 2: podiumTotal2, 3: podiumTotal3}, top3, "totalEUR");
+
+            let rank = 3;
+            const rows = users.slice(3, 50).map(u => {
+                rank++;
+                const v = Number(u.totalEUR || 0);
+                const photo = u.photoDataUrl || defaultAvatarDataUrl();
+                return `
+      <tr>
+        <td>${rank}</td>
+        <td>
+          <div class="d-flex align-items-center">
+            <img class="lb-avatar" src="${escapeHtml(photo)}" alt="Profilbild">
+            <div class="fw-semibold">${escapeHtml(u.username)}</div>
+          </div>
+        </td>
+        <td class="text-end ${amountClass(v)}">${formatEUR(v)}</td>
+      </tr>
+    `;
+            }).join("");
+
+            tbodyLeaderboardTotal.innerHTML = rows.trim()
+                ? rows
+                : `<tr><td colspan="3" class="small-muted">Keine weiteren Plätze (ab #4).</td></tr>`;
+        });
+
+
         // Performance: mein totalEUR vs alle anderen totalEUR
         const unsubTotal = onSnapshot(qTotal, async (snap) => {
             if(!currentUser){
@@ -1337,7 +1440,7 @@
         });
 
 
-        return () => { unsubCash(); unsubTour(); unsubTotal(); };
+        return () => { unsubCash(); unsubTour(); unsubTotal(); unsubTotalBoard(); };
     }
 
     // Profile: open + file preview + save
@@ -1457,6 +1560,14 @@
             podiumTour2.innerHTML = "";
             podiumTour3.innerHTML = "";
 
+
+            tbodyLeaderboardTotal.innerHTML = "";
+
+            podiumTotal1.innerHTML = "";
+            podiumTotal2.innerHTML = "";
+            podiumTotal3.innerHTML = "";
+
+
             navAvatar.src = defaultAvatarDataUrl();
             navUsername.textContent = "Profil";
 
@@ -1484,6 +1595,12 @@
         whoAmI.textContent = `${udoc.username}`;
         setNavProfile(udoc.username, udoc.photoDataUrl || null);
 
+        const adminLink = document.getElementById("adminLink");
+
+        const isAdmin = await isAdminUid(user.uid);
+        adminLink.classList.toggle("d-none", !isAdmin);
+
+
         // Listen to all my entries once, then split into cash/tour in UI
         const qMine = query(collection(db, "users", user.uid, "entries"), orderBy("date", "asc"));
         unsubEntries = onSnapshot(qMine, async (snap) => {
@@ -1500,5 +1617,14 @@
         unsubLeaderboards = listenLeaderboards();
     });
 </script>
+
+<script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("./sw.js");
+        });
+    }
+</script>
+
 </body>
 </html>
