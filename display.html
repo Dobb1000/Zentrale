@@ -418,6 +418,49 @@
             main{ height: auto; }
             body{ overflow:auto; } /* fallback on very small screens */
         }
+
+
+        .players-card, .info-card{
+            height: 100%;
+            overflow: hidden;
+            min-height: 0;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-wrap{
+            flex: 1 1 auto;
+            min-height: 0;
+
+            background: rgba(255,255,255,0.96);
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.10);
+        }
+
+
+        :root{
+            --tbl-font: 18px !important;
+            --tbl-pad-y: 0.60rem !important;
+            --tbl-avatar: 2.5rem !important;
+        }
+
+        .table thead th{
+            font-size: calc(var(--tbl-font) - 1px);
+        }
+
+        .table tbody td{
+            font-size: var(--tbl-font);
+            padding-top: var(--tbl-pad-y);
+            padding-bottom: var(--tbl-pad-y);
+        }
+
+        .avatar{
+            width: var(--tbl-avatar);
+            height: var(--tbl-avatar);
+        }
+
     </style>
 </head>
 
@@ -1022,17 +1065,36 @@
     let payoutTimer = null;
 
     function ensureAutoPaging(){
+        // PLAYERS
         if(playersPageTimer) clearInterval(playersPageTimer);
         playersPageTimer = setInterval(() => {
-            const totalPages = Math.max(1, Math.ceil(currentPlayersView.length / playersRowsPerPage));
+            // sicherstellen, dass rowsPerPage aktuell ist
+            playersRowsPerPage = estimateRowsPerPage();
+
+            const totalPages = Math.ceil((currentPlayersView?.length || 0) / Math.max(1, playersRowsPerPage));
+
+            // NUR durchwechseln, wenn wirklich mehr als 1 Seite existiert (also "unten voll")
+            if(totalPages <= 1) {
+                playersPage = 0; // stabil auf Seite 1 bleiben
+                return;
+            }
+
             playersPage = (playersPage + 1) % totalPages;
             renderPlayers();
         }, 6000);
 
+        // PAYOUTS
         if(payoutTimer) clearInterval(payoutTimer);
         payoutTimer = setInterval(() => {
             const { rows } = computePayoutsGross();
-            const totalPages = Math.max(1, Math.ceil(rows.length / payoutsPerPage));
+            const totalPages = Math.ceil((rows?.length || 0) / Math.max(1, payoutsPerPage));
+
+            // NUR durchwechseln, wenn mehr als 1 Seite existiert
+            if(totalPages <= 1) {
+                payoutPage = 0;
+                return;
+            }
+
             payoutPage = (payoutPage + 1) % totalPages;
             renderPayoutsCard();
         }, 7000);
@@ -1080,11 +1142,13 @@
     }
 
     window.addEventListener("resize", () => {
+        adjustTableVisualSize();
         playersRowsPerPage = estimateRowsPerPage();
         renderPlayers();
         renderPayoutsCard();
         fitToViewport();
     });
+
 
     // Clock
     let clockTick = null;
@@ -1282,6 +1346,9 @@
         const totalPages = Math.max(1, Math.ceil(rows.length / payoutsPerPage));
         payoutPage = Math.min(payoutPage, totalPages-1);
 
+        if(totalPages <= 1) payoutPage = 0;
+
+
         const start = payoutPage * payoutsPerPage;
         const pageRows = rows.slice(start, start + payoutsPerPage);
 
@@ -1318,7 +1385,7 @@
         thTable.classList.toggle("d-none", !anyTable);
         thSeat.classList.toggle("d-none", !anySeat);
         thStack.classList.toggle("d-none", !anyStack);
-        thEntries.classList.toggle("d-none", !anyEntries);
+        //thEntries.classList.toggle("d-none", !anyEntries);
 
         const s = tournament?.settings || {};
         const rebuyOn = !!s.rebuyEnabled;
@@ -1344,6 +1411,14 @@
             if(db !== da) return db - da;
 
             return String(a.username||"").localeCompare(String(b.username||""), "de");
+
+            // Wenn nur 1 Seite nötig ist: auf Seite 1 fixieren
+            const totalPagesNow = Math.ceil((currentPlayersView.length || 0) / Math.max(1, playersRowsPerPage));
+            if(totalPagesNow <= 1) playersPage = 0;
+
+            adjustTableVisualSize();
+            playersRowsPerPage = estimateRowsPerPage();
+
         });
 
         // Determine rows-per-page after first render measurement
@@ -1384,7 +1459,6 @@
           <td class="text-end ${(!anySeat ? "d-none":"")}">${escapeHtml(seatVal)}</td>
           <td class="text-end ${(!anyStack ? "d-none":"")}">${escapeHtml(stackVal)}</td>
 
-          <td class="text-end ${(!anyEntries ? "d-none":"")}">${escapeHtml(entriesVal)}</td>
           <td class="text-end ${(!(rebuyOn && anyRebuys) ? "d-none":"")}">${escapeHtml(rebuysVal)}</td>
           <td class="text-end ${(!(addonOn && anyAddons) ? "d-none":"")}">${escapeHtml(addonsVal)}</td>
           <td class="text-end ${(!anyPlace ? "d-none":"")}">${escapeHtml(placeVal)}</td>
@@ -1513,11 +1587,37 @@
 
     // initial fit once DOM settles
     setTimeout(() => {
+        adjustTableVisualSize();
         playersRowsPerPage = estimateRowsPerPage();
         renderPlayers();
         renderPayoutsCard();
         fitToViewport();
     }, 250);
+
+
+
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+    function adjustTableVisualSize(){
+        // Idee: Je höher die table-wrap ist, desto größer machen wir Schrift/Zeilen/Avatar.
+        const wrap = tbodyPlayers?.closest(".table-wrap");
+        if(!wrap) return;
+
+        const h = wrap.getBoundingClientRect().height;
+
+        // einfache Stufen/Mapping (robust, wirkt gut auf TVs):
+        // 300px => klein, 700px+ => deutlich größer
+        const t = clamp((h - 320) / 420, 0, 1); // 0..1
+
+        const font = 13 + t * 4;          // 13px .. 17px
+        const padY = 0.42 + t * 0.18;     // .42rem .. .60rem
+        const avatar = 30 + t * 10;       // 30px .. 40px
+
+        document.documentElement.style.setProperty("--tbl-font", `${font.toFixed(1)}px`);
+        document.documentElement.style.setProperty("--tbl-pad-y", `${padY.toFixed(2)}rem`);
+        document.documentElement.style.setProperty("--tbl-avatar", `${avatar.toFixed(0)}px`);
+    }
+
 </script>
 </body>
 </html>
