@@ -1,0 +1,1523 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Turnier – Display</title>
+
+    <!-- Hinweis: Manifest/ServiceWorker entfernt, damit es keine 404-Warnungen gibt. -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root{
+            --r: 18px;
+            --text: #e9eef5;
+            --muted: rgba(233,238,245,0.88);
+
+            --bg0: #0b0f14;
+            --card: rgba(255,255,255,0.065);
+            --card2: rgba(255,255,255,0.09);
+            --border: rgba(255,255,255,0.12);
+
+            --good: #57e389;
+            --bad:  #ff6b6b;
+            --warn: #fbbf24;
+            --info: #60a5fa;
+        }
+
+        /* NO SCROLL – anywhere */
+        html, body { height: 100%; }
+        body{
+            margin: 0;
+            overflow: hidden; /* wichtig */
+            background:
+                    radial-gradient(1200px 650px at 18% 0%, rgba(34,197,94,0.18) 0%, rgba(34,197,94,0) 60%),
+                    radial-gradient(1050px 560px at 85% 10%, rgba(59,130,246,0.16) 0%, rgba(59,130,246,0) 60%),
+                    linear-gradient(180deg, #070a10 0%, var(--bg0) 100%);
+            color: var(--text);
+        }
+
+        body.theme-neon{
+            background:
+                    radial-gradient(1100px 620px at 8% 10%, rgba(0,255,209,0.35) 0%, rgba(0,255,209,0) 60%),
+                    radial-gradient(1000px 560px at 92% 15%, rgba(255,0,230,0.30) 0%, rgba(255,0,230,0) 60%),
+                    radial-gradient(1200px 800px at 40% 120%, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 65%),
+                    linear-gradient(180deg, #04050a 0%, #080b12 100%);
+            --card: rgba(255,255,255,0.07);
+            --card2: rgba(255,255,255,0.11);
+            --border: rgba(255,255,255,0.14);
+        }
+
+        body.theme-classic{
+            background:
+                    radial-gradient(1200px 650px at 25% 0%, rgba(34,197,94,0.22) 0%, rgba(34,197,94,0) 62%),
+                    radial-gradient(1000px 560px at 85% 12%, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0) 62%),
+                    linear-gradient(180deg, #05070c 0%, #0b0f14 100%);
+        }
+
+        body.theme-carbon{
+            background:
+                    radial-gradient(1200px 650px at 15% 0%, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0) 62%),
+                    radial-gradient(1000px 560px at 88% 12%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 62%),
+                    linear-gradient(180deg, #060812 0%, #0b0f14 100%);
+            --card: rgba(255,255,255,0.06);
+            --card2: rgba(255,255,255,0.09);
+        }
+
+        .navbar{
+            backdrop-filter: blur(10px);
+            background: rgba(10, 14, 20, 0.68) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .card{
+            border-radius: var(--r);
+            border: 1px solid var(--border);
+            background: var(--card);
+            box-shadow: 0 14px 50px rgba(0,0,0,0.42);
+        }
+        .card-strong{
+            background: var(--card2);
+            border-color: rgba(255,255,255,0.16);
+            box-shadow: 0 18px 70px rgba(0,0,0,0.55);
+        }
+
+        .badge-soft{
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.14);
+            color: var(--text);
+        }
+
+        body.theme-neon .badge-soft{
+            background: rgba(0,255,209,0.10);
+            border-color: rgba(0,255,209,0.28);
+        }
+
+        .mono{
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+        .footer-hint{ color: var(--muted); }
+
+        /* Viewport-fit wrapper: we will scale it in JS if needed */
+        main{
+            height: calc(100vh - 64px);
+            overflow: hidden; /* wichtig */
+        }
+        #fitRoot{
+            height: 100%;
+            transform-origin: top left;
+        }
+
+        /* TOP */
+        .top-grid{
+            display:grid;
+            grid-template-columns: 1.65fr 1fr;
+            gap: 12px;
+            align-items: stretch;
+        }
+
+        .title-row{
+            display:flex;
+            align-items:center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chip{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(255,255,255,0.10);
+            color:#fff;
+            white-space: nowrap;
+        }
+        .chip .dot{
+            width: 10px; height: 10px; border-radius: 999px;
+            background: rgba(255,255,255,0.30);
+            border: 1px solid rgba(255,255,255,0.30);
+        }
+        .dot-setup{ background:#cbd5e1; border-color: rgba(203,213,225,0.65); }
+        .dot-running{ background: var(--good); border-color: rgba(87,227,137,0.6); }
+        .dot-paused{ background: var(--warn); border-color: rgba(251,191,36,0.6); }
+        .dot-break{ background: var(--info); border-color: rgba(96,165,250,0.6); }
+        .dot-finished{ background: var(--bad); border-color: rgba(255,107,107,0.6); }
+
+        /* BLINDS HERO */
+        .blinds-card{
+            border-radius: 22px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background:
+                    radial-gradient(600px 280px at 15% 15%, rgba(96,165,250,0.18) 0%, rgba(96,165,250,0) 55%),
+                    radial-gradient(600px 280px at 85% 25%, rgba(87,227,137,0.16) 0%, rgba(87,227,137,0) 55%),
+                    rgba(255,255,255,0.06);
+            box-shadow: 0 22px 90px rgba(0,0,0,0.52);
+            padding: 12px 14px;
+            display:flex;
+            align-items:center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        body.theme-neon .blinds-card{
+            background:
+                    radial-gradient(700px 320px at 12% 20%, rgba(0,255,209,0.22) 0%, rgba(0,255,209,0) 58%),
+                    radial-gradient(700px 320px at 88% 25%, rgba(255,0,230,0.18) 0%, rgba(255,0,230,0) 58%),
+                    rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.20);
+        }
+
+        .blinds-left .label{
+            color: rgba(233,238,245,0.92);
+            font-weight: 800;
+            letter-spacing: .3px;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        .blinds-left .value{
+            font-weight: 950;
+            font-variant-numeric: tabular-nums;
+            font-size: clamp(34px, 4.2vw, 58px);
+            line-height: 1.05;
+            color: #fff;
+            text-shadow: 0 14px 45px rgba(0,0,0,.45);
+        }
+
+        .kpi-row{
+            display:flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .kpi-pill{
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(255,255,255,0.10);
+            padding: 10px 12px;
+            display:flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 150px;
+        }
+        .kpi-pill .k-label{
+            color: rgba(233,238,245,0.88);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: .35px;
+            font-size: 11px;
+        }
+        .kpi-pill .k-value{
+            color:#fff;
+            font-weight: 950;
+            font-variant-numeric: tabular-nums;
+            font-size: 26px; /* hervorgehoben */
+            line-height: 1.05;
+        }
+        .kpi-pill .k-sub{
+            color: rgba(233,238,245,0.82);
+            font-size: 12px;
+        }
+
+        /* TIMER */
+        .timer-card{
+            border-radius: 22px;
+            padding: 12px 14px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.06);
+            display:flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            overflow: hidden;
+        }
+        .big-timer{
+            font-variant-numeric: tabular-nums;
+            font-weight: 950;
+            letter-spacing: .5px;
+            line-height: 1;
+            font-size: clamp(48px, 7vw, 96px);
+            color:#fff;
+            text-shadow: 0 14px 45px rgba(0,0,0,.50);
+        }
+
+        /* MAIN SPLIT */
+        .main-split{
+            display:grid;
+            grid-template-columns: 1.35fr 1fr;
+            gap: 12px;
+            align-items: stretch;
+            height: calc(100% - 210px); /* Top-Bereich grob; JS skaliert falls nötig */
+            min-height: 0;
+        }
+
+        /* PLAYERS */
+        .players-card, .info-card{
+            height: 100%;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .top-controls{
+            display:flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        /* TABLE WRAP (no scroll) */
+        .table-wrap{
+            background: rgba(255,255,255,0.96);
+            border-radius: 14px;
+            overflow: hidden;   /* kein Scroll */
+            border: 1px solid rgba(0,0,0,0.10);
+        }
+        .table{ color:#111 !important; margin:0; }
+        .table thead th{
+            color:#111 !important;
+            background: rgba(0,0,0,0.04) !important;
+            border-bottom: 1px solid rgba(0,0,0,0.12) !important;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+        .table tbody td{
+            color:#111 !important;
+            border-color: rgba(0,0,0,0.08) !important;
+            vertical-align: middle;
+            font-size: 13px;
+            padding-top: .42rem;
+            padding-bottom: .42rem;
+            white-space: nowrap;
+        }
+
+        .avatar{
+            width: 30px; height: 30px;
+            border-radius: 999px;
+            object-fit: cover;
+            border: 1px solid rgba(0,0,0,0.18);
+            background: rgba(0,0,0,0.05);
+            margin-right: 10px;
+            flex: 0 0 auto;
+        }
+        .status-dot{
+            width: 10px; height: 10px; border-radius: 999px;
+            background: rgba(0,0,0,0.20);
+            border: 1px solid rgba(0,0,0,0.12);
+            display:inline-block;
+            margin-right: 10px;
+        }
+        .dot-in{ background: var(--good); border-color: rgba(87,227,137,0.55); }
+        .dot-out{ background: var(--bad); border-color: rgba(255,107,107,0.55); }
+
+        /* INFO PANEL */
+        .section-title{
+            font-weight: 950;
+            color: #fff;
+            letter-spacing: .2px;
+            margin: 0;
+        }
+        .section-sub{
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        .info-grid{
+            display:grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        .info-row{
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.06);
+            padding: 10px 12px;
+            overflow: hidden;
+        }
+
+        .pillset{
+            display:flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 2px;
+        }
+
+        .pillx{
+            border-radius: 999px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.10);
+            color:#fff;
+            display:inline-flex;
+            gap: 10px;
+            align-items: center;
+            white-space: nowrap;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            font-size: 14px;
+        }
+        .pillx .p-label{
+            font-weight: 900;
+            letter-spacing: .2px;
+            color: rgba(233,238,245,0.92);
+        }
+        .pillx .p-value{
+            font-weight: 950;
+            color:#fff;
+        }
+
+        .pillx.good{ border-color: rgba(87,227,137,0.35); background: rgba(87,227,137,0.12); }
+        .pillx.bad{ border-color: rgba(255,107,107,0.35); background: rgba(255,107,107,0.10); }
+
+        .mini{
+            color: rgba(233,238,245,0.90);
+            font-size: 13px;
+            margin-top: 10px;
+            display:flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .kv{
+            padding: 7px 9px;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.18);
+            border: 1px solid rgba(255,255,255,0.12);
+            color:#fff;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* compact payout list (no scroll -> we paginate) */
+        .payout-list{
+            display:flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+            min-height: 0;
+        }
+        .payout-item{
+            display:flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.07);
+            font-weight: 900;
+            color:#fff;
+            font-variant-numeric: tabular-nums;
+        }
+        .payout-item .left{ opacity: .95; }
+        .payout-item .right{ opacity: .98; }
+
+        /* Responsive: stack columns on smaller screens */
+        @media (max-width: 1200px){
+            .top-grid{ grid-template-columns: 1fr; }
+            .main-split{ grid-template-columns: 1fr; height: auto; }
+            main{ height: auto; }
+            body{ overflow:auto; } /* fallback on very small screens */
+        }
+    </style>
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container py-2">
+        <a class="navbar-brand fw-semibold" href="#">Turnier – Display</a>
+        <div class="ms-auto d-flex gap-2 align-items-center flex-wrap">
+            <span class="badge badge-soft" id="connBadge">Offline</span>
+            <span class="badge badge-soft d-none d-md-inline" id="tidBadge">—</span>
+            <span class="badge badge-soft mono" id="clockBadge">—</span>
+        </div>
+    </div>
+</nav>
+
+<main class="container py-3">
+    <div id="fitRoot">
+
+        <!-- JOIN -->
+        <div class="row g-3" id="joinArea">
+            <div class="col-12 col-lg-7">
+                <div class="card p-3 p-md-4 card-strong">
+                    <h1 class="h4 mb-1 text-white">Display verbinden</h1>
+                    <div class="footer-hint mb-3">
+                        Öffne diese Seite mit <span class="mono">?tid=DEIN_TURNIER_ID</span> (Link aus Setup).
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-12 col-md-8">
+                            <label class="form-label footer-hint mb-1">Tournament ID</label>
+                            <input class="form-control" id="tidInput" placeholder="z. B. abCDeFGh123" autocomplete="off">
+                        </div>
+                        <div class="col-12 col-md-4 d-grid align-self-end">
+                            <button class="btn btn-primary btn-lg" id="btnJoin" type="button">Anzeigen</button>
+                        </div>
+                    </div>
+
+                    <div class="text-danger mt-3" id="joinMsg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DISPLAY -->
+        <div id="displayArea" class="d-none">
+
+            <!-- TOP -->
+            <div class="row g-3 mb-2">
+                <div class="col-12">
+                    <div class="card p-3 p-md-4 card-strong">
+                        <div class="top-grid">
+
+                            <!-- LEFT -->
+                            <div class="d-flex flex-column gap-3">
+                                <div class="title-row">
+                                    <h1 class="h3 mb-0 text-white" id="tName">Turnier</h1>
+                                    <span class="badge badge-soft" id="tType">—</span>
+
+                                    <span class="chip" id="statusChip">
+                    <span class="dot dot-setup" id="statusDot"></span>
+                    <span class="fw-semibold" id="tStatus">—</span>
+                  </span>
+
+                                    <span class="badge badge-soft d-none d-md-inline" id="tMeta">—</span>
+                                </div>
+
+                                <div class="blinds-card">
+                                    <div class="blinds-left">
+                                        <div class="label">Aktuelle Blinds</div>
+                                        <div class="value mono" id="lvlBlindsBig">—</div>
+
+                                        <div class="kpi-row">
+                                            <div class="kpi-pill">
+                                                <div class="k-label">Level</div>
+                                                <div class="k-value mono" id="lvlNo">—</div>
+                                                <div class="k-sub" id="anteLine">Ante —</div>
+                                            </div>
+                                            <div class="kpi-pill">
+                                                <div class="k-label">Pool</div>
+                                                <div class="k-value mono" id="poolText">—</div>
+                                                <div class="k-sub">aktueller Stand</div>
+                                            </div>
+                                            <div class="kpi-pill">
+                                                <div class="k-label">Players</div>
+                                                <div class="k-value mono" id="playersKpi">—</div>
+                                                <div class="k-sub">IN / TOTAL</div>
+                                            </div>
+                                            <div class="kpi-pill">
+                                                <div class="k-label">OUT</div>
+                                                <div class="k-value mono" id="outKpi">—</div>
+                                                <div class="k-sub">ausgeschieden</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT -->
+                            <div class="timer-card">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div>
+                                        <div class="footer-hint" id="timerLine">—</div>
+                                    </div>
+                                    <span class="badge badge-soft mono" id="nextBreakBadge">—</span>
+                                </div>
+
+                                <div class="big-timer mono" id="timerText">00:00</div>
+
+                                <div class="footer-hint" id="statsLine">—</div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAIN -->
+            <div class="main-split">
+
+                <!-- PLAYERS -->
+                <div class="card p-3 p-md-4 players-card">
+                    <div class="top-controls">
+                        <div>
+                            <h2 class="h5 mb-0 text-white">Spieler</h2>
+                            <div class="footer-hint" id="playersHeader">Players: —</div>
+                        </div>
+
+                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <div class="d-flex align-items-center gap-2 d-none" id="tablesFilterWrap">
+                                <span class="badge badge-soft">Tische</span>
+                                <select class="form-select form-select-sm" id="tableFilter" style="min-width: 160px;">
+                                    <option value="all">Gesamt</option>
+                                </select>
+                            </div>
+                            <span class="badge badge-soft" id="playersBadge">0</span>
+                        </div>
+                    </div>
+
+                    <hr class="border border-light border-opacity-10 my-3">
+
+                    <!-- NO SCROLL: we paginate rows -->
+                    <div class="table-wrap">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Spieler</th>
+                                <th class="text-end d-none" id="thTable">Table</th>
+                                <th class="text-end" id="thSeat">Seat</th>
+                                <th class="text-end" id="thStack">Stack</th>
+                                <th class="text-end d-none" id="thEntries">Entries</th>
+                                <th class="text-end d-none" id="thRebuys">Rebuys</th>
+                                <th class="text-end d-none" id="thAddons">Addons</th>
+                                <th class="text-end d-none" id="thPlace">Platz</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tbodyPlayers"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- INFO -->
+                <div class="card p-3 p-md-4 info-card">
+                    <div class="d-flex align-items-baseline justify-content-between gap-2 flex-wrap">
+                        <div>
+                            <h2 class="h5 section-title">Wichtige Settings</h2>
+                            <div class="section-sub">Buy-in / Rebuy / Add-on mit Betrag, plus Gewinne.</div>
+                        </div>
+                        <span class="badge badge-soft" id="tablesInfoBadge">—</span>
+                    </div>
+
+                    <hr class="border border-light border-opacity-10 my-3">
+
+                    <div class="info-grid">
+
+                        <!-- BUY/REBUY/ADDON -->
+                        <div class="info-row">
+                            <div class="pillset">
+                <span class="pillx" id="pillBuyin">
+                  <span class="p-label">Buy-in</span>
+                  <span class="p-value mono" id="buyinValue">—</span>
+                </span>
+
+                                <span class="pillx" id="pillRebuy">
+                  <span class="p-label">Rebuy</span>
+                  <span class="p-value mono" id="rebuyValue">—</span>
+                </span>
+
+                                <span class="pillx" id="pillAddon">
+                  <span class="p-label">Add-on</span>
+                  <span class="p-value mono" id="addonValue">—</span>
+                </span>
+                            </div>
+
+                            <div class="mini" id="windowInfo">—</div>
+                        </div>
+
+                        <!-- TOTALS -->
+                        <div class="info-row">
+                            <div class="footer-hint" style="font-weight:900; color:#fff; letter-spacing:.2px;">Totals</div>
+                            <div class="mini">
+                                <span class="kv">Entries: <span class="mono" id="entriesTotal">—</span></span>
+                                <span class="kv">Rebuys: <span class="mono" id="rebuysTotal">—</span></span>
+                                <span class="kv">Add-ons: <span class="mono" id="addonsTotal">—</span></span>
+                            </div>
+                        </div>
+
+                        <!-- GEWINNE (NEU) -->
+                        <div class="info-row">
+                            <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                                <div class="footer-hint" style="font-weight:900; color:#fff; letter-spacing:.2px;">Gewinne (Pool-Auszahlung)</div>
+                                <span class="badge badge-soft mono" id="payoutPageBadge">—</span>
+                            </div>
+                            <div class="payout-list" id="payoutList"></div>
+                            <div class="footer-hint mt-2" id="payoutHint">—</div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div><!-- /main-split -->
+        </div><!-- /display -->
+    </div><!-- /fitRoot -->
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getFirestore, doc, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyASN7beVlrbMtUwMr4BKfSx1EmUQZJAfNk",
+        authDomain: "zentrale-ee675.firebaseapp.com",
+        projectId: "zentrale-ee675",
+        storageBucket: "zentrale-ee675.firebasestorage.app",
+        messagingSenderId: "1091342474994",
+        appId: "1:1091342474994:web:29ff79685bbd4e5077fa6b",
+        measurementId: "G-S805TDBQCQ"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // DOM
+    const fitRoot = document.getElementById("fitRoot");
+
+    const connBadge = document.getElementById("connBadge");
+    const tidBadge  = document.getElementById("tidBadge");
+    const clockBadge = document.getElementById("clockBadge");
+
+    const joinArea = document.getElementById("joinArea");
+    const displayArea = document.getElementById("displayArea");
+    const tidInput = document.getElementById("tidInput");
+    const btnJoin = document.getElementById("btnJoin");
+    const joinMsg = document.getElementById("joinMsg");
+
+    const tName = document.getElementById("tName");
+    const tType = document.getElementById("tType");
+    const tStatus = document.getElementById("tStatus");
+    const tMeta = document.getElementById("tMeta");
+    const statusDot = document.getElementById("statusDot");
+
+    const lvlNo = document.getElementById("lvlNo");
+    const lvlBlindsBig = document.getElementById("lvlBlindsBig");
+    const anteLine = document.getElementById("anteLine");
+
+    const poolText = document.getElementById("poolText");
+    const playersKpi = document.getElementById("playersKpi");
+    const outKpi = document.getElementById("outKpi");
+
+    const timerText = document.getElementById("timerText");
+    const timerLine = document.getElementById("timerLine");
+    const statsLine = document.getElementById("statsLine");
+    const nextBreakBadge = document.getElementById("nextBreakBadge");
+
+    // Players table
+    const playersHeader = document.getElementById("playersHeader");
+    const playersBadge = document.getElementById("playersBadge");
+    const tbodyPlayers = document.getElementById("tbodyPlayers");
+    const thTable = document.getElementById("thTable");
+    const thSeat = document.getElementById("thSeat");
+    const thStack = document.getElementById("thStack");
+    const thEntries = document.getElementById("thEntries");
+    const thRebuys = document.getElementById("thRebuys");
+    const thAddons = document.getElementById("thAddons");
+    const thPlace = document.getElementById("thPlace");
+    const tablesFilterWrap = document.getElementById("tablesFilterWrap");
+    const tableFilter = document.getElementById("tableFilter");
+
+    // Info
+    const tablesInfoBadge = document.getElementById("tablesInfoBadge");
+    const pillBuyin = document.getElementById("pillBuyin");
+    const pillRebuy = document.getElementById("pillRebuy");
+    const pillAddon = document.getElementById("pillAddon");
+    const buyinValue = document.getElementById("buyinValue");
+    const rebuyValue = document.getElementById("rebuyValue");
+    const addonValue = document.getElementById("addonValue");
+    const windowInfo = document.getElementById("windowInfo");
+    const entriesTotal = document.getElementById("entriesTotal");
+    const rebuysTotal = document.getElementById("rebuysTotal");
+    const addonsTotal = document.getElementById("addonsTotal");
+
+    // Payouts card (NEW)
+    const payoutList = document.getElementById("payoutList");
+    const payoutHint = document.getElementById("payoutHint");
+    const payoutPageBadge = document.getElementById("payoutPageBadge");
+
+    // helpers
+    function escapeHtml(str){
+        return (str ?? "").toString()
+            .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+            .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    }
+
+    function defaultAvatarDataUrl(){
+        const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#334155"/><stop offset="1" stop-color="#0f172a"/>
+        </linearGradient></defs>
+        <rect width="128" height="128" rx="64" fill="url(#g)"/>
+        <circle cx="64" cy="52" r="22" fill="#e2e8f0" opacity="0.95"/>
+        <path d="M22,118c8-24,30-34,42-34s34,10,42,34" fill="#e2e8f0" opacity="0.95"/>
+      </svg>
+    `.trim();
+        return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    }
+
+    function msToClock(ms){
+        const s = Math.max(0, Math.floor(ms/1000));
+        const mm = String(Math.floor(s/60)).padStart(2,"0");
+        const ss = String(s%60).padStart(2,"0");
+        return `${mm}:${ss}`;
+    }
+
+    function fmtEUR(v){
+        return Number(v||0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+    }
+
+    function moneyShortEUR(v){
+        const n = Number(v||0);
+        if(!isFinite(n) || n<=0) return "—";
+        const s = n.toLocaleString("de-DE", { maximumFractionDigits: 0 });
+        return `${s}€`;
+    }
+
+    function setConnected(ok){
+        connBadge.textContent = ok ? "Live" : "Offline";
+        connBadge.classList.toggle("bg-success", ok);
+        connBadge.classList.toggle("bg-danger", !ok);
+        connBadge.classList.add("badge-soft");
+    }
+
+    function stateDotClass(s){
+        const v = String(s||"setup");
+        if(v==="running") return "dot-running";
+        if(v==="paused") return "dot-paused";
+        if(v==="break") return "dot-break";
+        if(v==="finished") return "dot-finished";
+        return "dot-setup";
+    }
+
+    function getTidFromUrl(){
+        return (new URL(location.href).searchParams.get("tid") || "").trim();
+    }
+    function gotoTid(tid){
+        const u = new URL(location.href);
+        u.searchParams.set("tid", tid);
+        location.href = u.toString();
+    }
+
+    // Loud beep (last 3 seconds)
+    let audioCtx = null;
+    function ensureAudio(){
+        if(audioCtx) return audioCtx;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioCtx();
+        return audioCtx;
+    }
+    function loudBeep(durationMs=170, freq=1400){
+        try{
+            const ctx = ensureAudio();
+            if(ctx.state === "suspended") ctx.resume();
+
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+
+            o.type = "square";
+            o.frequency.value = freq;
+
+            const now = ctx.currentTime;
+            g.gain.setValueAtTime(0.0001, now);
+            g.gain.exponentialRampToValueAtTime(0.55, now + 0.015);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + (durationMs/1000));
+
+            o.connect(g);
+            g.connect(ctx.destination);
+            o.start(now);
+            o.stop(now + (durationMs/1000) + 0.02);
+        }catch(_){}
+    }
+    let beepArmed = true;
+    function doFinalCountdownBeeps(){
+        loudBeep(180, 1500);
+        setTimeout(() => loudBeep(180, 1500), 350);
+        setTimeout(() => loudBeep(180, 1500), 700);
+    }
+
+    // parse label "SB/BB (Ante)"
+    function parseBlindsFromLabel(label){
+        const s = String(label||"").trim();
+        const m = s.match(/(\d+)\s*\/\s*(\d+)/);
+        if(!m) return { sb:0, bb:0 };
+        return { sb: Number(m[1]||0), bb: Number(m[2]||0) };
+    }
+    function parseAnteFromLabel(label){
+        const m = String(label||"").match(/\((\d+)\)/);
+        if(!m) return 0;
+        return Number(m[1] || 0);
+    }
+
+    function computeInTotal(list){
+        const total = list.length;
+        const inCount = list.filter(p => (p.status || "playing") !== "out").length;
+        const outCount = total - inCount;
+        return { inCount, outCount, total };
+    }
+
+    function sumField(list, field){
+        let n = 0;
+        for(const p of list) n += Math.max(0, Number(p[field] ?? 0));
+        return n;
+    }
+
+    function computePool(t, list){
+        const buyIn = Number(t.buyInEUR || 0);
+        const s = t.settings || {};
+        const rebuyOn = !!s.rebuyEnabled;
+        const addonOn = !!s.addonEnabled;
+        const rebuyEUR = Number(s.rebuyEUR ?? buyIn);
+        const addonEUR = Number(s.addonEUR ?? buyIn);
+
+        let pool = 0;
+        for(const p of list){
+            const entries = Math.max(0, Number(p.entries ?? 1));
+            const rebuys = Math.max(0, Number(p.rebuys ?? 0));
+            const addons = Math.max(0, Number(p.addons ?? 0));
+            pool += entries * buyIn;
+            if(rebuyOn) pool += rebuys * rebuyEUR;
+            if(addonOn) pool += addons * addonEUR;
+        }
+        return pool;
+    }
+
+    function getThemeClass(t){
+        const theme = String((t.settings||{}).displayTheme || "default");
+        if(theme === "neon") return "theme-neon";
+        if(theme === "classic") return "theme-classic";
+        if(theme === "carbon") return "theme-carbon";
+        return "";
+    }
+
+    function setPillEnabled(el, enabled){
+        el.classList.remove("good","bad");
+        el.classList.add(enabled ? "good" : "bad");
+    }
+
+    // schedule compute (levels collection)
+    let levelsCache = [];
+    function getLevelsOrdered(){
+        return levelsCache
+            .slice()
+            .sort((a,b)=> Number(a.index||0) - Number(b.index||0))
+            .map(l => ({
+                index: Number(l.index||0),
+                type: String(l.type||"level"),
+                minutes: Math.max(0, Number(l.minutes||0)),
+                label: String(l.label||"")
+            }));
+    }
+
+    function computeScheduleAt(tdata, atMs){
+        const timer = tdata?.timer || {};
+        const stateStored = String(timer.state || tdata.status || "setup");
+
+        if(stateStored === "finished"){
+            return {
+                state:"finished",
+                currentLevelIndex: Number(tdata.currentLevelIndex||1),
+                currentLevelType: String(tdata.currentLevelType||"level"),
+                currentLevelLabel: String(tdata.currentLevelLabel||""),
+                remainingMs: 0
+            };
+        }
+
+        if(stateStored === "break"){
+            const until = Number(timer.breakUntilMs || 0);
+            if(until > 0){
+                return {
+                    state:"break",
+                    currentLevelIndex: Number(tdata.currentLevelIndex||1),
+                    currentLevelType: "break",
+                    currentLevelLabel: "BREAK",
+                    remainingMs: Math.max(0, until - atMs)
+                };
+            }
+        }
+
+        const scheduleStartMs = Number(timer.scheduleStartMs||0);
+        const pausedAtMs = Number(timer.pausedAtMs||0);
+        const totalPausedMs = Number(timer.totalPausedMs||0);
+
+        const levels = getLevelsOrdered();
+        if(!levels.length || !scheduleStartMs){
+            return {
+                state: stateStored,
+                currentLevelIndex: Number(tdata.currentLevelIndex||1),
+                currentLevelType: String(tdata.currentLevelType||"level"),
+                currentLevelLabel: String(tdata.currentLevelLabel||""),
+                remainingMs: 0
+            };
+        }
+
+        const effectiveNow = (stateStored === "paused" && pausedAtMs) ? pausedAtMs : atMs;
+        const elapsed = Math.max(0, effectiveNow - scheduleStartMs - totalPausedMs);
+
+        let acc = 0;
+        for(const lvl of levels){
+            const dur = Math.max(0, lvl.minutes * 60 * 1000);
+            const end = acc + dur;
+
+            if(elapsed < end){
+                const remaining = Math.max(0, end - elapsed);
+                const lvlState = (lvl.type === "break") ? "break" : "running";
+                const outState = (stateStored === "paused") ? "paused" : lvlState;
+                return {
+                    state: outState,
+                    currentLevelIndex: lvl.index,
+                    currentLevelType: lvl.type,
+                    currentLevelLabel: lvl.label || (lvl.type==="break" ? "BREAK" : ""),
+                    remainingMs: remaining
+                };
+            }
+            acc = end;
+        }
+
+        return {
+            state:"finished",
+            currentLevelIndex: levels[levels.length-1]?.index || Number(tdata.currentLevelIndex||1),
+            currentLevelType:"level",
+            currentLevelLabel:"",
+            remainingMs: 0
+        };
+    }
+
+    function levelsUntilNextBreak(currentIndex){
+        const levels = getLevelsOrdered();
+        if(!levels.length) return { hasBreak:false, distance:0, nextBreakIndex:0 };
+        const curPos = levels.findIndex(l => Number(l.index) === Number(currentIndex));
+        if(curPos < 0) return { hasBreak:false, distance:0, nextBreakIndex:0 };
+        for(let i=curPos+1;i<levels.length;i++){
+            if(levels[i].type === "break"){
+                return { hasBreak:true, distance: (i - curPos), nextBreakIndex: Number(levels[i].index||0) };
+            }
+        }
+        return { hasBreak:false, distance:0, nextBreakIndex:0 };
+    }
+
+    // Payouts from percents (gross payout) – for the “Gewinne” card
+    function computePayoutsGross(){
+        const s = tournament?.settings || {};
+        const perc = Array.isArray(s.payoutPercents) ? s.payoutPercents : [];
+        const pool = computePool(tournament, players);
+
+        const rows = perc
+            .map(r => ({ place: Number(r.place||0), percent: Number(r.percent||0) }))
+            .filter(r => r.place>0 && r.percent>0)
+            .sort((a,b)=> a.place - b.place)
+            .map(r => ({
+                place: r.place,
+                percent: r.percent,
+                payout: pool * (r.percent/100)
+            }));
+
+        return { pool, rows };
+    }
+
+    // --- Pagination (NO SCROLL) ---
+    let selectedTableFilter = "all";
+    tableFilter.addEventListener("change", () => {
+        selectedTableFilter = String(tableFilter.value || "all");
+        playersPage = 0;
+        renderPlayers();
+        fitToViewport();
+    });
+
+    let playersPage = 0;
+    let playersRowsPerPage = 10;
+    let playersPageTimer = null;
+
+    let payoutPage = 0;
+    let payoutsPerPage = 5;
+    let payoutTimer = null;
+
+    function ensureAutoPaging(){
+        if(playersPageTimer) clearInterval(playersPageTimer);
+        playersPageTimer = setInterval(() => {
+            const totalPages = Math.max(1, Math.ceil(currentPlayersView.length / playersRowsPerPage));
+            playersPage = (playersPage + 1) % totalPages;
+            renderPlayers();
+        }, 6000);
+
+        if(payoutTimer) clearInterval(payoutTimer);
+        payoutTimer = setInterval(() => {
+            const { rows } = computePayoutsGross();
+            const totalPages = Math.max(1, Math.ceil(rows.length / payoutsPerPage));
+            payoutPage = (payoutPage + 1) % totalPages;
+            renderPayoutsCard();
+        }, 7000);
+    }
+
+    function estimateRowsPerPage(){
+        // Rough: compute available tbody height by measuring table-wrap height minus thead height.
+        const wrap = tbodyPlayers?.closest(".table-wrap");
+        if(!wrap) return 10;
+
+        const rect = wrap.getBoundingClientRect();
+        const thead = wrap.querySelector("thead");
+        const theadH = thead ? thead.getBoundingClientRect().height : 34;
+
+        // Reserve a tiny padding for borders
+        const available = Math.max(120, rect.height - theadH - 6);
+
+        // Row height estimate: if exists use first row else fallback
+        const firstRow = wrap.querySelector("tbody tr");
+        const rowH = firstRow ? firstRow.getBoundingClientRect().height : 34;
+
+        const n = Math.max(4, Math.floor(available / Math.max(28, rowH)));
+        return n;
+    }
+
+    function fitToViewport(){
+        // Scale fitRoot down if needed, so no scroll is necessary.
+        // We keep it <= 1 (never scale up).
+        try{
+            fitRoot.style.transform = "scale(1)";
+            fitRoot.style.width = "auto";
+
+            const main = document.querySelector("main");
+            if(!main) return;
+
+            const avail = main.getBoundingClientRect().height;
+            const needed = fitRoot.scrollHeight;
+
+            const scale = Math.min(1, avail / Math.max(1, needed));
+            fitRoot.style.transform = `scale(${scale})`;
+
+            // keep layout width when scaled
+            fitRoot.style.width = scale < 1 ? `${(100/scale).toFixed(3)}%` : "auto";
+        }catch(_){}
+    }
+
+    window.addEventListener("resize", () => {
+        playersRowsPerPage = estimateRowsPerPage();
+        renderPlayers();
+        renderPayoutsCard();
+        fitToViewport();
+    });
+
+    // Clock
+    let clockTick = null;
+    function ensureClock(){
+        if(clockTick) clearInterval(clockTick);
+        const renderClock = () => {
+            const now = new Date();
+            const time = now.toLocaleTimeString("de-DE", { hour:"2-digit", minute:"2-digit" });
+            const date = now.toLocaleDateString("de-DE", { day:"2-digit", month:"2-digit", year:"numeric" });
+            clockBadge.textContent = `${date} ${time}`;
+        };
+        renderClock();
+        clockTick = setInterval(renderClock, 1000);
+    }
+    ensureClock();
+
+    // State
+    let tid = getTidFromUrl();
+    let unsubTournament = null;
+    let unsubPlayers = null;
+    let unsubLevels = null;
+
+    let tournament = null;
+    let players = [];
+    let tick = null;
+
+    // Current filtered/sorted view for paging
+    let currentPlayersView = [];
+
+    function stopAll(){
+        if(unsubTournament){ unsubTournament(); unsubTournament=null; }
+        if(unsubPlayers){ unsubPlayers(); unsubPlayers=null; }
+        if(unsubLevels){ unsubLevels(); unsubLevels=null; }
+        tournament = null;
+        players = [];
+        levelsCache = [];
+        if(tick){ clearInterval(tick); tick=null; }
+        if(playersPageTimer){ clearInterval(playersPageTimer); playersPageTimer=null; }
+        if(payoutTimer){ clearInterval(payoutTimer); payoutTimer=null; }
+    }
+
+    function showJoin(msg=""){
+        joinArea.classList.remove("d-none");
+        displayArea.classList.add("d-none");
+        joinMsg.textContent = msg;
+        tidBadge.textContent = "—";
+        setConnected(false);
+    }
+    function showDisplay(){
+        joinArea.classList.add("d-none");
+        displayArea.classList.remove("d-none");
+    }
+
+    function ensureTableFilterUI(){
+        const tOpt = (tournament?.settings?.tables) || {};
+        const enabled = !!tOpt.enabled;
+        const tableCount = Math.max(0, Number(tOpt.tableCount || 0));
+
+        tablesFilterWrap.classList.toggle("d-none", !(enabled && tableCount > 0));
+        if(!(enabled && tableCount > 0)) return;
+
+        const cur = String(tableFilter.value || "all");
+        const opts = [`<option value="all">Gesamt</option>`].concat(
+            Array.from({length: tableCount}, (_,i)=> `<option value="${i+1}">Table ${i+1}</option>`)
+        );
+        tableFilter.innerHTML = opts.join("");
+
+        // FIX: no invalid tokens; no escaping
+        const values = Array.from(tableFilter.options).map(o => o.value);
+        tableFilter.value = values.includes(cur) ? cur : "all";
+        selectedTableFilter = String(tableFilter.value || "all");
+    }
+
+    function filteredPlayersForTable(list){
+        const tOpt = (tournament?.settings?.tables) || {};
+        const enabled = !!tOpt.enabled;
+        if(!enabled) return list;
+        if(selectedTableFilter === "all") return list;
+        const tn = Number(selectedTableFilter);
+        return list.filter(p => Number(p.tableNo || 0) === tn);
+    }
+
+    function renderHeaderAndRightPanel(){
+        if(!tournament) return;
+
+        // Theme
+        document.body.classList.remove("theme-neon","theme-classic","theme-carbon");
+        const cls = getThemeClass(tournament);
+        if(cls) document.body.classList.add(cls);
+
+        const computed = computeScheduleAt(tournament, Date.now());
+        const state = String(computed.state || tournament.status || "setup");
+
+        tName.textContent = tournament.name || "Turnier";
+        tType.textContent = String(tournament.type || "—");
+
+        const loc = (tournament.location || "").trim();
+        tMeta.textContent = loc ? `Ort: ${loc}` : "—";
+
+        tStatus.textContent = state.toUpperCase();
+        statusDot.className = `dot ${stateDotClass(state)}`;
+
+        const curLevelNo = Number(computed.currentLevelIndex || tournament.currentLevelIndex || 1);
+        lvlNo.textContent = String(curLevelNo);
+
+        const label = String(computed.currentLevelLabel || tournament.currentLevelLabel || "");
+        const { sb, bb } = parseBlindsFromLabel(label);
+        lvlBlindsBig.textContent = (sb>0 && bb>0) ? `${sb}/${bb}` : "—";
+
+        const ante = parseAnteFromLabel(label);
+        anteLine.textContent = ante > 0 ? `Ante ${ante}` : "Ante —";
+
+        const { inCount, outCount, total } = computeInTotal(players);
+        playersKpi.textContent = `${inCount}/${total}`;
+        outKpi.textContent = String(outCount);
+
+        const pool = computePool(tournament, players);
+        poolText.textContent = fmtEUR(pool);
+
+        const nb = levelsUntilNextBreak(curLevelNo);
+        nextBreakBadge.textContent = nb.hasBreak ? `Pause in ${nb.distance} Leveln (L${nb.nextBreakIndex})` : "Kein Break geplant";
+
+        // Settings pills
+        const s = tournament.settings || {};
+        const buyIn = Number(tournament.buyInEUR || 0);
+
+        const rebuyOn = !!s.rebuyEnabled;
+        const addonOn = !!s.addonEnabled;
+
+        const rUntil = Number(s.rebuyUntilLevel || 0);
+        const aUntil = Number(s.addonUntilLevel || 0);
+
+        const rMax = (s.rebuyMaxPerPlayer == null) ? "∞" : String(Number(s.rebuyMaxPerPlayer));
+        const aMax = (s.addonMaxPerPlayer == null) ? "∞" : String(Number(s.addonMaxPerPlayer));
+
+        const rebuyEUR = Number(s.rebuyEUR ?? buyIn);
+        const addonEUR = Number(s.addonEUR ?? buyIn);
+
+        buyinValue.textContent = moneyShortEUR(buyIn);
+
+        const rebuyAllowed = rebuyOn && (rUntil ? (curLevelNo <= rUntil) : true);
+        const addonAllowed = addonOn && (aUntil ? (curLevelNo <= aUntil) : true);
+
+        rebuyValue.textContent = rebuyOn ? moneyShortEUR(rebuyEUR) : "NEIN";
+        addonValue.textContent = addonOn ? moneyShortEUR(addonEUR) : "NEIN";
+
+        setPillEnabled(pillBuyin, true);
+        setPillEnabled(pillRebuy, rebuyOn && rebuyAllowed);
+        setPillEnabled(pillAddon, addonOn && addonAllowed);
+
+        const wParts = [];
+        if(rebuyOn) wParts.push(`Rebuy: bis L${rUntil || "∞"} (Limit ${rMax})`);
+        else wParts.push(`Rebuy: deaktiviert`);
+        if(addonOn) wParts.push(`Add-on: bis L${aUntil || "∞"} (Limit ${aMax})`);
+        else wParts.push(`Add-on: deaktiviert`);
+        windowInfo.innerHTML = wParts.map(x => `<span class="kv">${escapeHtml(x)}</span>`).join(" ");
+
+        // totals
+        entriesTotal.textContent = String(sumField(players, "entries"));
+        rebuysTotal.textContent = String(sumField(players, "rebuys"));
+        addonsTotal.textContent = String(sumField(players, "addons"));
+
+        // tables badge
+        const tOpt = s.tables || {};
+        const tablesEnabled = !!tOpt.enabled;
+        if(!tablesEnabled){
+            tablesInfoBadge.textContent = "Tables: aus";
+        }else{
+            const tc = Number(tOpt.tableCount || 0);
+            const seats = Number(tOpt.seatsPerTable || 0);
+            tablesInfoBadge.textContent = `Tables: ${tc} • Seats: ${seats || "—"}`;
+        }
+
+        // footer line in timer card (keine Status-Dopplung)
+        statsLine.textContent = `Entries: ${entriesTotal.textContent} • Rebuys: ${rebuysTotal.textContent} • Add-ons: ${addonsTotal.textContent}`;
+
+        renderPayoutsCard();
+    }
+
+    function renderPayoutsCard(){
+        if(!tournament){
+            payoutList.innerHTML = "";
+            payoutHint.textContent = "—";
+            payoutPageBadge.textContent = "—";
+            return;
+        }
+        const { pool, rows } = computePayoutsGross();
+        if(!rows.length){
+            payoutList.innerHTML = `<div class="footer-hint">Keine Auszahlungstabelle hinterlegt.</div>`;
+            payoutHint.textContent = "Hinterlege settings.payoutPercents im Turnier.";
+            payoutPageBadge.textContent = "—";
+            return;
+        }
+
+        const totalPages = Math.max(1, Math.ceil(rows.length / payoutsPerPage));
+        payoutPage = Math.min(payoutPage, totalPages-1);
+
+        const start = payoutPage * payoutsPerPage;
+        const pageRows = rows.slice(start, start + payoutsPerPage);
+
+        payoutPageBadge.textContent = `Seite ${payoutPage+1}/${totalPages}`;
+        payoutHint.textContent = `Pool aktuell: ${fmtEUR(pool)} • Auszahlung = % vom Pool`;
+
+        payoutList.innerHTML = pageRows.map(r => {
+            return `
+        <div class="payout-item">
+          <div class="left">#${escapeHtml(String(r.place))} <span class="footer-hint" style="opacity:.9;">(${escapeHtml(String(r.percent))}%)</span></div>
+          <div class="right mono">${escapeHtml(fmtEUR(r.payout))}</div>
+        </div>
+      `;
+        }).join("");
+    }
+
+    function renderPlayers(){
+        const list = filteredPlayersForTable(players);
+
+        const { inCount, outCount, total } = computeInTotal(list);
+        playersBadge.textContent = String(players.length);
+
+        const tOpt = (tournament?.settings?.tables) || {};
+        const tablesEnabled = !!tOpt.enabled;
+
+        const anyTable = tablesEnabled && players.some(p => Number(p.tableNo||0) > 0);
+        const anySeat = list.some(p => Number(p.seat||0) > 0);
+        const anyStack = list.some(p => Number(p.stack||0) > 0);
+        const anyEntries = list.some(p => Number(p.entries||0) > 0);
+        const anyRebuys = list.some(p => Number(p.rebuys||0) > 0);
+        const anyAddons = list.some(p => Number(p.addons||0) > 0);
+        const anyPlace = players.some(p => Number(p.place||0) > 0);
+
+        thTable.classList.toggle("d-none", !anyTable);
+        thSeat.classList.toggle("d-none", !anySeat);
+        thStack.classList.toggle("d-none", !anyStack);
+        thEntries.classList.toggle("d-none", !anyEntries);
+
+        const s = tournament?.settings || {};
+        const rebuyOn = !!s.rebuyEnabled;
+        const addonOn = !!s.addonEnabled;
+
+        thRebuys.classList.toggle("d-none", !(rebuyOn && anyRebuys));
+        thAddons.classList.toggle("d-none", !(addonOn && anyAddons));
+        thPlace.classList.toggle("d-none", !anyPlace);
+
+        // Sort (stable / meaningful)
+        currentPlayersView = list.slice().sort((a,b)=>{
+            const pa = Number(a.place||0), pb = Number(b.place||0);
+            if(pa>0 || pb>0){
+                if(pa===0) return 1;
+                if(pb===0) return -1;
+                return pa - pb;
+            }
+            const sa = (a.status || "playing");
+            const sb = (b.status || "playing");
+            if(sa !== sb) return sa === "out" ? 1 : -1;
+
+            const da = Number(a.stack||0), db = Number(b.stack||0);
+            if(db !== da) return db - da;
+
+            return String(a.username||"").localeCompare(String(b.username||""), "de");
+        });
+
+        // Determine rows-per-page after first render measurement
+        playersRowsPerPage = estimateRowsPerPage();
+        const totalPages = Math.max(1, Math.ceil(currentPlayersView.length / playersRowsPerPage));
+        playersPage = Math.min(playersPage, totalPages-1);
+
+        const start = playersPage * playersRowsPerPage;
+        const pageRows = currentPlayersView.slice(start, start + playersRowsPerPage);
+
+        playersHeader.textContent = `Players: ${inCount}/${total} • OUT: ${outCount} • Seite ${playersPage+1}/${totalPages}`;
+
+        tbodyPlayers.innerHTML = pageRows.map(p => {
+            const out = (p.status === "out");
+            const dot = `<span class="status-dot ${out ? "dot-out":"dot-in"}"></span>`;
+            const photo = p.photoDataUrl || defaultAvatarDataUrl();
+
+            const tableVal = Number(p.tableNo||0) > 0 ? String(p.tableNo) : "";
+            const seatVal  = Number(p.seat||0) > 0 ? String(p.seat) : "";
+            const stackVal = Number(p.stack||0) > 0 ? String(p.stack) : "";
+
+            const entriesVal = Number(p.entries??0) > 0 ? String(p.entries) : "";
+            const rebuysVal  = Number(p.rebuys||0) > 0 ? String(p.rebuys) : "";
+            const addonsVal  = Number(p.addons||0) > 0 ? String(p.addons) : "";
+            const placeVal   = Number(p.place||0) > 0 ? String(p.place) : "";
+
+            return `
+        <tr>
+          <td>${dot}<span class="badge badge-soft" style="color: #000">${escapeHtml(out ? "OUT":"IN")}</span></td>
+          <td>
+            <div class="d-flex align-items-center">
+              <img class="avatar" src="${escapeHtml(photo)}" alt="">
+              <div class="fw-semibold">${escapeHtml(p.username || "Spieler")}</div>
+            </div>
+          </td>
+
+          <td class="text-end ${(!anyTable ? "d-none":"")}">${escapeHtml(tableVal)}</td>
+          <td class="text-end ${(!anySeat ? "d-none":"")}">${escapeHtml(seatVal)}</td>
+          <td class="text-end ${(!anyStack ? "d-none":"")}">${escapeHtml(stackVal)}</td>
+
+          <td class="text-end ${(!anyEntries ? "d-none":"")}">${escapeHtml(entriesVal)}</td>
+          <td class="text-end ${(!(rebuyOn && anyRebuys) ? "d-none":"")}">${escapeHtml(rebuysVal)}</td>
+          <td class="text-end ${(!(addonOn && anyAddons) ? "d-none":"")}">${escapeHtml(addonsVal)}</td>
+          <td class="text-end ${(!anyPlace ? "d-none":"")}">${escapeHtml(placeVal)}</td>
+        </tr>
+      `;
+        }).join("") || `<tr><td colspan="9" class="text-center" style="color:#111;">Keine Spieler.</td></tr>`;
+
+        // after render: fit & refresh pagination calculation if needed
+        playersRowsPerPage = estimateRowsPerPage();
+    }
+
+    function renderTimer(){
+        if(!tournament){
+            timerText.textContent = "00:00";
+            timerLine.textContent = "—";
+            return;
+        }
+
+        const computed = computeScheduleAt(tournament, Date.now());
+        const state = String(computed.state || tournament.status || "setup");
+
+        const remaining = Math.max(0, Number(computed.remainingMs || 0));
+        timerText.textContent = msToClock(remaining);
+
+        // Beep on last 3 seconds (once per cycle)
+        if((state === "running" || state === "break") && remaining <= 3000 && remaining > 0){
+            if(beepArmed){
+                beepArmed = false;
+                doFinalCountdownBeeps();
+            }
+        }
+        if(remaining > 3500) beepArmed = true;
+
+        if(state === "running") timerLine.textContent = "LEVEL LÄUFT";
+        else if(state === "paused") timerLine.textContent = "PAUSIERT";
+        else if(state === "break") timerLine.textContent = "BREAK";
+        else if(state === "finished") timerLine.textContent = "FINISHED";
+        else timerLine.textContent = "SETUP";
+    }
+
+    function startTick(){
+        if(tick) clearInterval(tick);
+        tick = setInterval(() => {
+            renderTimer();
+            renderHeaderAndRightPanel();
+            // Fit continuously (fast but safe). If you prefer, increase to 1000ms.
+            fitToViewport();
+        }, 250);
+        renderTimer();
+    }
+
+    function attachListeners(tid){
+        stopAll();
+        showDisplay();
+        tidBadge.textContent = `tid: ${tid}`;
+        ensureAutoPaging();
+
+        unsubTournament = onSnapshot(doc(db, "tournaments", tid), (snap) => {
+            setConnected(true);
+            if(!snap.exists()){
+                showJoin("Turnier nicht gefunden (falsche tid?).");
+                stopAll();
+                return;
+            }
+            tournament = snap.data() || {};
+            ensureTableFilterUI();
+            renderHeaderAndRightPanel();
+            renderPlayers();
+            startTick();
+            fitToViewport();
+        }, (err) => {
+            console.error(err);
+            showJoin(err?.message || "Fehler beim Lesen des Turniers.");
+            stopAll();
+        });
+
+        unsubPlayers = onSnapshot(
+            query(collection(db, "tournaments", tid, "players"), orderBy("seat", "asc")),
+            (snap) => {
+                setConnected(true);
+                players = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                // keep paging stable when list changes
+                playersPage = 0;
+
+                ensureTableFilterUI();
+                renderHeaderAndRightPanel();
+                renderPlayers();
+                fitToViewport();
+            },
+            (err) => console.error(err)
+        );
+
+        unsubLevels = onSnapshot(
+            query(collection(db, "tournaments", tid, "levels"), orderBy("index", "asc")),
+            (snap) => {
+                setConnected(true);
+                levelsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderHeaderAndRightPanel();
+                renderTimer();
+                fitToViewport();
+            },
+            (err) => console.error(err)
+        );
+    }
+
+    // Join + unlock audio (user gesture)
+    btnJoin.addEventListener("click", () => {
+        try{ ensureAudio(); }catch(_){}
+        const v = (tidInput.value || "").trim();
+        if(!v){ joinMsg.textContent = "Bitte Tournament ID eingeben."; return; }
+        gotoTid(v);
+    });
+
+    // unlock audio on any click (TV browsers)
+    document.addEventListener("click", () => {
+        try{
+            const ctx = ensureAudio();
+            if(ctx.state === "suspended") ctx.resume();
+        }catch(_){}
+    }, { passive:true });
+
+    // Boot
+    if(!tid) showJoin("");
+    else attachListeners(tid);
+
+    // initial fit once DOM settles
+    setTimeout(() => {
+        playersRowsPerPage = estimateRowsPerPage();
+        renderPlayers();
+        renderPayoutsCard();
+        fitToViewport();
+    }, 250);
+</script>
+</body>
+</html>
