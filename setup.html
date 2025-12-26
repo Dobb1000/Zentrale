@@ -219,6 +219,9 @@
         <a class="navbar-brand fw-semibold" href="#">Poker – Turnier Setup</a>
         <div class="ms-auto d-flex gap-2 align-items-center">
             <span class="badge badge-soft" id="authStatus">Nicht eingeloggt</span>
+            <a href="./index.html" class="btn btn-sm btn-outline-light d-none" id="btnBackToApp">
+                Zur App
+            </a>
             <a class="btn btn-sm btn-outline-light d-none" id="btnOpenDisplay" href="#" target="_blank" rel="noopener">Display öffnen</a>
             <button class="btn btn-sm btn-outline-light d-none" id="btnLogout" type="button">Logout</button>
         </div>
@@ -3232,6 +3235,15 @@
             return;
         }
 
+        const ok = await isAdminUid2(user.uid);
+        if(!ok){
+            setUI(false);
+            loginMsg.textContent = "Kein Admin-Zugriff für diesen Account.";
+            await signOut(auth);
+            document.getElementById("btnBackToApp").classList.add("d-none");
+            return;
+        }
+
         setUI(true);
         whoAmI.textContent = `UID: ${user.uid}`;
 
@@ -3242,7 +3254,15 @@
 
         // No tournament selected by default
         await openTournament(null);
+
+        document.getElementById("btnBackToApp").classList.remove("d-none");
     });
+
+    async function isAdminUid2(uid){
+        const ref = doc(db, "admins", uid);
+        const snap = await getDoc(ref);
+        return snap.exists();
+    }
 
     btnBookPayouts.addEventListener("click", async () => {
         payoutMsg.textContent = "";
