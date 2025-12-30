@@ -203,13 +203,6 @@
                         </a>
                     </li>
                     <li><hr class="dropdown-divider"></li>
-
-                    <li>
-                        <a class="dropdown-item d-none" id="setupLink" href="./setup.html">
-                            Turnier Setup Panel
-                        </a>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
                     <li><button class="dropdown-item" id="btnOpenProfile" type="button">Profil bearbeiten</button></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><button class="dropdown-item text-danger" id="btnLogout" type="button">Logout</button></li>
@@ -1603,11 +1596,9 @@
         setNavProfile(udoc.username, udoc.photoDataUrl || null);
 
         const adminLink = document.getElementById("adminLink");
-        const setupLink = document.getElementById("setupLink");
 
         const isAdmin = await isAdminUid(user.uid);
         adminLink.classList.toggle("d-none", !isAdmin);
-        setupLink.classList.toggle("d-none", !isAdmin);
 
 
         // Listen to all my entries once, then split into cash/tour in UI
