@@ -1123,7 +1123,6 @@
             adminWhoAmI.textContent = "";
             return;
         }
-
         const ok = await isAdminUid(user.uid);
         if(!ok){
             setUI(false);

@@ -1609,7 +1609,6 @@
         adminLink.classList.toggle("d-none", !isAdmin);
         setupLink.classList.toggle("d-none", !isAdmin);
 
-
         // Listen to all my entries once, then split into cash/tour in UI
         const qMine = query(collection(db, "users", user.uid, "entries"), orderBy("date", "asc"));
         unsubEntries = onSnapshot(qMine, async (snap) => {
