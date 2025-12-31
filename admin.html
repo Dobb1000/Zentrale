@@ -1065,31 +1065,37 @@
         unsubAllEntries = onSnapshot(
             query(collectionGroup(db, "entries"), orderBy("date", "desc"), limit(300)),
             (snap) => {
-                allEntriesCache = snap.docs.map(d => {
-                    const parts = d.ref.path.split("/");
-                    const uid = parts[1];
-                    const entryId = d.id;
-                    const data = d.data();
-                    return {
-                        uid,
-                        entryId,
-                        date: data.date || "",
-                        type: data.type || "",
-                        amount: Number(data.amount || 0),
-                        currency: data.currency || "",
-                        note: data.note || ""
-                    };
-                });
+                allEntriesCache = snap.docs
+                    .map(d => {
+                        const parts = d.ref.path.split("/");
+                        const usersIndex = parts.indexOf("users");
+                        const uid = usersIndex >= 0 ? parts[usersIndex + 1] : null;
+                        if(!uid) return null; // ignore entries not under users/{uid}/entries
+
+                        const data = d.data();
+                        return {
+                            uid,
+                            entryId: d.id,
+                            date: data.date || "",
+                            type: data.type || "",
+                            amount: Number(data.amount || 0),
+                            currency: data.currency || "",
+                            note: data.note || ""
+                        };
+                    })
+                    .filter(Boolean);
+
                 renderAllEntriesTable();
             },
             (err) => {
-                console.error("Alle Einträge onSnapshot Fehler:", err);
+                console.error("Alle Einträge onSnapshot Fehler:", err.code, err.message);
                 tbodyAllEntries.innerHTML =
                     `<tr><td data-label="Fehler" colspan="6" class="text-danger">
-            Fehler beim Laden: ${escapeHtml(err.message || String(err))}
-          </td></tr>`;
+        Fehler beim Laden: ${escapeHtml(err.message || String(err))}
+      </td></tr>`;
             }
         );
+
 
         listenLeaderboards();
     }
