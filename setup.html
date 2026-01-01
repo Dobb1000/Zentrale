@@ -813,8 +813,8 @@
                                                 <input class="form-control" type="number" step="1" id="genStartSb" value="100" disabled>
                                             </div>
                                             <div class="col-12 col-md-4">
-                                                <label class="form-label mb-1">Start BB</label>
-                                                <input class="form-control" type="number" step="1" id="genStartBb" value="200" disabled>
+                                                <input class="form-control" type="number" step="1" id="genStartBb" value="200" disabled readonly>
+                                                <div class="small-muted mt-1">Wird automatisch aus Start SB × Faktor berechnet.</div>
                                             </div>
                                             <div class="col-12 col-md-4">
                                                 <label class="form-label mb-1">Ante Start</label>
@@ -890,6 +890,31 @@
                                                 </thead>
                                                 <tbody id="tbodyLevels"></tbody>
                                             </table>
+
+
+
+                                        </div>
+
+                                        <!-- unter der Levels-Tabelle, vor #levelsMsg -->
+                                        <div class="d-flex gap-2 flex-wrap mt-3">
+                                            <button class="btn btn-outline-light" id="btnAddLevel" type="button" disabled>Level hinzufügen</button>
+                                            <button class="btn btn-outline-light" id="btnRecalcLabels" type="button" disabled>BB/Label neu berechnen</button>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <div class="small-muted mb-2">Blinds Verlauf</div>
+                                            <div class="table-wrap" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.10);">
+                                                <svg id="blindsChart" viewBox="0 0 900 320" width="100%" height="320" style="display:block;"></svg>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <div class="small-muted">Voraussichtliche Turnierdauer</div>
+                                            <div class="pill mt-2">
+                                                <span class="small-muted">Estimate</span>
+                                                <span class="fw-semibold mono" id="tournamentDurationEstimate">—</span>
+                                            </div>
+                                            <div class="small-muted mt-2" id="tournamentDurationHint" style="opacity:.9;"></div>
                                         </div>
 
                                         <div class="small text-danger mt-2" id="levelsMsg"></div>
@@ -1153,6 +1178,18 @@
     const btnResetTournament = document.getElementById("btnResetTournament");
     const btnDeleteTournament = document.getElementById("btnDeleteTournament");
     const dangerMsg = document.getElementById("dangerMsg");
+
+
+
+
+
+
+    const btnAddLevel = document.getElementById("btnAddLevel");
+    const btnRecalcLabels = document.getElementById("btnRecalcLabels");
+    const blindsChart = document.getElementById("blindsChart");
+    const tournamentDurationEstimate = document.getElementById("tournamentDurationEstimate");
+    const tournamentDurationHint = document.getElementById("tournamentDurationHint");
+
 
     // Helpers
     function escapeHtml(str){
@@ -2666,6 +2703,66 @@
         const s = Math.max(1, Number(step||50));
         return Math.max(0, Math.round(Number(v||0)/s) * s);
     }
+
+
+    function computeLevelLabel({ type, sb, bb, ante }){
+        const typ = String(type || "level");
+        if(typ === "break") return "BREAK";
+        const s = Math.max(0, Math.round(Number(sb || 0)));
+        const b = Math.max(0, Math.round(Number(bb || 0)));
+        const a = Math.max(0, Math.round(Number(ante || 0)));
+        return `${s}/${b}${a > 0 ? ` (${a})` : ""}`;
+    }
+
+    function getStructureAutoSettings(){
+        const t = tournamentCache || {};
+        const s = t.settings || {};
+        const st = s.structure || {};
+        return {
+            roundStep: Math.max(1, Math.round(Number(st.roundStep ?? genRoundStep?.value ?? 50))),
+            bbFactor: Math.max(2, Math.round(Number(st.bbFactor ?? genBbFactor?.value ?? 2))),
+        };
+    }
+
+    // normalized level patch: enforce bb + label from sb/ante (no manual label needed)
+    function normalizeLevelPatch(partial){
+        const { roundStep, bbFactor } = getStructureAutoSettings();
+        const type = String(partial.type ?? "level");
+
+        if(type === "break"){
+            return { ...partial, sb: 0, bb: 0, ante: 0, label: "BREAK" };
+        }
+
+        const sb = Math.max(0, Math.round(Number(partial.sb ?? 0)));
+        const ante = Math.max(0, Math.round(Number(partial.ante ?? 0)));
+
+        const sbR = roundToStep(sb, roundStep);
+        const bbR = roundToStep(sbR * bbFactor, roundStep);
+        const anteR = roundToStep(ante, roundStep);
+
+        return {
+            ...partial,
+            type: "level",
+            sb: sbR,
+            bb: bbR,
+            ante: anteR,
+            label: computeLevelLabel({ type: "level", sb: sbR, bb: bbR, ante: anteR })
+        };
+    }
+
+    // generator UI: keep Start BB in sync with SB × factor
+    function syncGenStartBb(){
+        const bbFactor = Math.max(2, Math.round(Number(genBbFactor.value || 2)));
+        const sb = Math.max(1, Math.round(Number(genStartSb.value || 100)));
+        genStartBb.value = String(sb * bbFactor);
+    }
+    genStartSb.addEventListener("input", syncGenStartBb);
+    genBbFactor.addEventListener("change", syncGenStartBb);
+    syncGenStartBb();
+
+
+
+
     async function generateStructure(){
         if(!currentTid) return;
         structureMsg.textContent = "";
@@ -2680,35 +2777,48 @@
         const step = Math.max(1, Math.round(Number(genRoundStep.value||50)));
         const bbFactor = Math.max(2, Math.round(Number(genBbFactor.value||2)));
 
+        // persist auto-settings so manual edits can reuse them
+        await scheduleSettingsPatch({ structure: { roundStep: step, bbFactor } });
+
         await deleteSubcollectionDocs(currentTid, "levels");
 
-        let sb = startSb;
-        let ante = startAnte;
+        // IMPORTANT: keep RAW values unrounded, otherwise step=100 can stall forever
+        let sbRaw = startSb;
+        let anteRaw = startAnte;
 
         const b = writeBatch(db);
         let idx = 1;
 
-        const addLevelDoc = (index, type, minutes, sbv, bbv, antev, label) => {
+        const addLevelDoc = (index, type, minutes, sbv, bbv, antev) => {
             const id = String(index);
+            const label = computeLevelLabel({ type, sb: sbv, bb: bbv, ante: antev });
             b.set(doc(db, "tournaments", currentTid, "levels", id), {
-                index, type, minutes, sb: sbv, bb: bbv, ante: antev, label,
-                updatedAt: serverTimestamp(), createdAt: serverTimestamp()
+                index,
+                type,
+                minutes,
+                sb: sbv,
+                bb: bbv,
+                ante: antev,
+                label,
+                updatedAt: serverTimestamp(),
+                createdAt: serverTimestamp()
             }, { merge: false });
         };
 
         for(let l=1; l<=levelsCount; l++){
-            const sbR = roundToStep(sb, step);
+            const sbR = roundToStep(sbRaw, step);
             const bbR = roundToStep(sbR * bbFactor, step);
-            const anteR = roundToStep(ante, step);
+            const anteR = roundToStep(anteRaw, step);
 
-            addLevelDoc(idx, "level", levelMin, sbR, bbR, anteR, `${sbR}/${bbR}${anteR>0?` (${anteR})`:""}`);
+            addLevelDoc(idx, "level", levelMin, sbR, bbR, anteR);
             idx++;
 
-            sb = sbR * growth;
-            if(anteR > 0) ante = anteR * growth;
+            // grow RAW (NOT the rounded value)
+            sbRaw = sbRaw * growth;
+            if(anteRaw > 0) anteRaw = anteRaw * growth;
 
             if(breakEvery > 0 && l < levelsCount && (l % breakEvery === 0)){
-                addLevelDoc(idx, "break", breakMin, 0, 0, 0, "BREAK");
+                addLevelDoc(idx, "break", breakMin, 0, 0, 0);
                 idx++;
             }
         }
@@ -2722,6 +2832,8 @@
             updatedAt: serverTimestamp()
         });
     }
+
+
 
     btnGenerateStructure.addEventListener("click", async () => {
         structureMsg.textContent = "";
@@ -2791,36 +2903,40 @@
 
             // levels
             const typeEl = e.target.closest("select[data-edit-level-type]");
-            const minEl = e.target.closest("input[data-edit-level-min]");
-            const sbEl = e.target.closest("input[data-edit-level-sb]");
-            const bbEl = e.target.closest("input[data-edit-level-bb]");
+            const minEl  = e.target.closest("input[data-edit-level-min]");
+            const sbEl   = e.target.closest("input[data-edit-level-sb]");
             const anteEl = e.target.closest("input[data-edit-level-ante]");
-            const labelEl = e.target.closest("input[data-edit-level-label]");
 
             if(typeEl){
                 const lid = typeEl.getAttribute("data-edit-level-type");
-                await updateDoc(doc(db, "tournaments", currentTid, "levels", lid), { type: typeEl.value, updatedAt: serverTimestamp() });
+                const nextType = String(typeEl.value || "level");
+                const cur = levelsCache.find(x => x.id === lid) || {};
+                const patch = normalizeLevelPatch({ ...cur, type: nextType });
+                await updateDoc(doc(db, "tournaments", currentTid, "levels", lid), { type: patch.type, sb: patch.sb, bb: patch.bb, ante: patch.ante, label: patch.label, updatedAt: serverTimestamp() });
             }
+
             if(minEl){
                 const lid = minEl.getAttribute("data-edit-level-min");
-                await updateDoc(doc(db, "tournaments", currentTid, "levels", lid), { minutes: Math.max(0, Math.round(Number(minEl.value||0))), updatedAt: serverTimestamp() });
+                await updateDoc(doc(db, "tournaments", currentTid, "levels", lid), {
+                    minutes: Math.max(0, Math.round(Number(minEl.value||0))),
+                    updatedAt: serverTimestamp()
+                });
             }
+
             if(sbEl){
                 const lid = sbEl.getAttribute("data-edit-level-sb");
-                await updateDoc(doc(db, "tournaments", currentTid, "levels", lid), { sb: Math.max(0, Math.round(Number(sbEl.value||0))), updatedAt: serverTimestamp() });
+                const cur = levelsCache.find(x => x.id === lid) || {};
+                const patch = normalizeLevelPatch({ ...cur, sb: Math.max(0, Math.round(Number(sbEl.value||0))) });
+                await updateDoc(doc(db, "tournaments", currentTid, "levels", lid), { sb: patch.sb, bb: patch.bb, label: patch.label, updatedAt: serverTimestamp() });
             }
-            if(bbEl){
-                const lid = bbEl.getAttribute("data-edit-level-bb");
-                await updateDoc(doc(db, "tournaments", currentTid, "levels", lid), { bb: Math.max(0, Math.round(Number(bbEl.value||0))), updatedAt: serverTimestamp() });
-            }
+
             if(anteEl){
                 const lid = anteEl.getAttribute("data-edit-level-ante");
-                await updateDoc(doc(db, "tournaments", currentTid, "levels", lid), { ante: Math.max(0, Math.round(Number(anteEl.value||0))), updatedAt: serverTimestamp() });
+                const cur = levelsCache.find(x => x.id === lid) || {};
+                const patch = normalizeLevelPatch({ ...cur, ante: Math.max(0, Math.round(Number(anteEl.value||0))) });
+                await updateDoc(doc(db, "tournaments", currentTid, "levels", lid), { ante: patch.ante, label: patch.label, updatedAt: serverTimestamp() });
             }
-            if(labelEl){
-                const lid = labelEl.getAttribute("data-edit-level-label");
-                await updateDoc(doc(db, "tournaments", currentTid, "levels", lid), { label: String(labelEl.value||""), updatedAt: serverTimestamp() });
-            }
+
 
             // payouts percent edit
             const payoutEdit = e.target.closest("input[data-edit-payout-percent]");
@@ -2909,52 +3025,124 @@
         }
     });
 
+
     function renderLevelsTable(){
+        const { bbFactor } = getStructureAutoSettings();
+
         tbodyLevels.innerHTML = levelsCache.map(l => {
             const typ = String(l.type || "level");
+            const sb = Math.max(0, Math.round(Number(l.sb ?? 0)));
+            const bb = Math.max(0, Math.round(Number(l.bb ?? 0)));
+            const ante = Math.max(0, Math.round(Number(l.ante ?? 0)));
+            const label = computeLevelLabel({ type: typ, sb, bb, ante });
+
             return `
-        <tr>
-          <td>${escapeHtml(String(l.index ?? ""))}</td>
+      <tr>
+        <td>${escapeHtml(String(l.index ?? ""))}</td>
 
-          <td>
-            <select class="form-select form-select-sm" data-edit-level-type="${escapeHtml(l.id)}" style="width:130px;">
-              <option value="level" ${typ==="level"?"selected":""}>level</option>
-              <option value="break" ${typ==="break"?"selected":""}>break</option>
-            </select>
-          </td>
+        <td>
+          <select class="form-select form-select-sm" data-edit-level-type="${escapeHtml(l.id)}" style="width:130px;">
+            <option value="level" ${typ==="level"?"selected":""}>level</option>
+            <option value="break" ${typ==="break"?"selected":""}>break</option>
+          </select>
+        </td>
 
-          <td class="text-end">
-            <input class="form-control form-control-sm" style="width:90px; margin-left:auto;"
-              type="number" step="1" value="${escapeHtml(String(l.minutes ?? 0))}" data-edit-level-min="${escapeHtml(l.id)}">
-          </td>
+        <td class="text-end">
+          <input class="form-control form-control-sm" style="width:90px; margin-left:auto;"
+            type="number" step="1" value="${escapeHtml(String(l.minutes ?? 0))}" data-edit-level-min="${escapeHtml(l.id)}">
+        </td>
 
-          <td class="text-end">
-            <input class="form-control form-control-sm" style="width:110px; margin-left:auto;"
-              type="number" step="1" value="${escapeHtml(String(l.sb ?? 0))}" data-edit-level-sb="${escapeHtml(l.id)}">
-          </td>
+        <td class="text-end">
+          <input class="form-control form-control-sm" style="width:110px; margin-left:auto;"
+            type="number" step="1" value="${escapeHtml(String(sb))}" data-edit-level-sb="${escapeHtml(l.id)}">
+        </td>
 
-          <td class="text-end">
-            <input class="form-control form-control-sm" style="width:110px; margin-left:auto;"
-              type="number" step="1" value="${escapeHtml(String(l.bb ?? 0))}" data-edit-level-bb="${escapeHtml(l.id)}">
-          </td>
+        <td class="text-end">
+          <span class="badge badge-soft mono" title="Auto: SB × ${escapeHtml(String(bbFactor))}">
+            ${escapeHtml(String(bb))}
+          </span>
+        </td>
 
-          <td class="text-end">
-            <input class="form-control form-control-sm" style="width:110px; margin-left:auto;"
-              type="number" step="1" value="${escapeHtml(String(l.ante ?? 0))}" data-edit-level-ante="${escapeHtml(l.id)}">
-          </td>
+        <td class="text-end">
+          <input class="form-control form-control-sm" style="width:110px; margin-left:auto;"
+            type="number" step="1" value="${escapeHtml(String(ante))}" data-edit-level-ante="${escapeHtml(l.id)}">
+        </td>
 
-          <td>
-            <input class="form-control form-control-sm" style="min-width:220px;"
-              value="${escapeHtml(String(l.label ?? ""))}" data-edit-level-label="${escapeHtml(l.id)}">
-          </td>
+        <td>
+          <span class="badge badge-soft mono">${escapeHtml(label)}</span>
+        </td>
 
-          <td class="text-end">
-            <button class="btn btn-sm btn-outline-danger" data-remove-level="${escapeHtml(l.id)}" type="button">Löschen</button>
-          </td>
-        </tr>
-      `;
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-danger" data-remove-level="${escapeHtml(l.id)}" type="button">Löschen</button>
+        </td>
+      </tr>
+    `;
         }).join("") || `<tr><td colspan="8" class="small-muted">Noch keine Levels.</td></tr>`;
     }
+
+
+    function getMaxLevelIndex(){
+        return (levelsCache || []).reduce((m, l) => Math.max(m, Number(l.index || 0)), 0);
+    }
+
+    async function addLevelAtEnd(){
+        if(!currentTid) return;
+
+        const nextIndex = getMaxLevelIndex() + 1;
+        const id = String(nextIndex);
+
+        // default: copy last LEVEL (not break) if exists
+        const lastLevel = (levelsCache || []).slice().sort((a,b)=>Number(a.index||0)-Number(b.index||0))
+            .reverse()
+            .find(x => String(x.type||"level")==="level") || null;
+
+        const base = lastLevel
+            ? { type:"level", minutes: Number(lastLevel.minutes||15), sb: Number(lastLevel.sb||0), ante: Number(lastLevel.ante||0) }
+            : { type:"level", minutes: Math.max(1, Math.round(Number(genLevelMinutes.value||15))), sb: Math.max(1, Math.round(Number(genStartSb.value||100))), ante: 0 };
+
+        const normalized = normalizeLevelPatch(base);
+
+        await setDoc(doc(db, "tournaments", currentTid, "levels", id), {
+            index: nextIndex,
+            type: normalized.type,
+            minutes: Math.max(0, Math.round(Number(base.minutes||0))),
+            sb: normalized.sb,
+            bb: normalized.bb,
+            ante: normalized.ante,
+            label: normalized.label,
+            updatedAt: serverTimestamp(),
+            createdAt: serverTimestamp()
+        }, { merge: false });
+    }
+
+    btnAddLevel.addEventListener("click", async () => {
+        levelsMsg.textContent = "";
+        try{
+            await addLevelAtEnd();
+        }catch(err){
+            levelsMsg.textContent = err?.message || "Level hinzufügen fehlgeschlagen.";
+        }
+    });
+
+    btnRecalcLabels.addEventListener("click", async () => {
+        levelsMsg.textContent = "";
+        if(!currentTid) return;
+        try{
+            const b = writeBatch(db);
+            for(const l of (levelsCache || [])){
+                const lid = String(l.id);
+                const normalized = normalizeLevelPatch(l);
+                b.update(doc(db, "tournaments", currentTid, "levels", lid), {
+                    sb: normalized.sb, bb: normalized.bb, ante: normalized.ante, label: normalized.label,
+                    updatedAt: serverTimestamp()
+                });
+            }
+            await b.commit();
+        }catch(err){
+            levelsMsg.textContent = err?.message || "Neu berechnen fehlgeschlagen.";
+        }
+    });
+
 
     // Danger helpers
     async function deleteSubcollectionDocs(tid, sub){
@@ -3126,6 +3314,13 @@
                 // Tables UI (needs caches, but render a baseline)
                 renderTablesUi();
 
+                renderBlindsChart();
+                renderDurationEstimate();
+
+                btnAddLevel.disabled = false;
+                btnRecalcLabels.disabled = false;
+
+
 
             },
             (err) => {
@@ -3172,10 +3367,14 @@
                 levelsCache = snap.docs.map(d => ({ id: d.id, ...(d.data()||{}) }));
 
                 renderLevelsTable();
+                renderBlindsChart();
+                renderDurationEstimate();
 
-                // Levels change affects local schedule -> re-plan
+// Levels change affects local schedule -> re-plan
                 renderTimerUiLocal();
                 scheduleNextTransition();
+
+
             },
             (err) => { levelsMsg.textContent = err?.message || "Fehler beim Laden der Levels."; }
         );
@@ -3329,7 +3528,156 @@
             await autoAssignPlaces();
         });
 
+    function getStopLevel(){
+        const s = tournamentCache?.settings || {};
+        const ru = Number(s.rebuyUntilLevel || 0);
+        const au = Number(s.addonUntilLevel || 0);
+        const stop = Math.max(ru, au);
+        return Number.isFinite(stop) ? stop : 0;
+    }
 
+    function renderBlindsChart(){
+        if(!blindsChart) return;
+
+        const rows = (levelsCache || [])
+            .slice()
+            .sort((a,b)=>Number(a.index||0)-Number(b.index||0))
+            .filter(l => String(l.type||"level")==="level")
+            .map(l => ({
+                x: Number(l.index||0),
+                sb: Math.max(0, Number(l.sb||0)),
+                bb: Math.max(0, Number(l.bb||0))
+            }))
+            .filter(p => p.x > 0);
+
+        const W=900, H=320, padL=55, padR=20, padT=20, padB=45;
+        const innerW = W - padL - padR;
+        const innerH = H - padT - padB;
+
+        const maxX = rows.reduce((m,r)=>Math.max(m,r.x), 1);
+        const maxY = rows.reduce((m,r)=>Math.max(m,r.bb, r.sb), 1);
+
+        const xScale = (x)=> padL + (innerW * (maxX<=1 ? 0 : (x-1)/(maxX-1)));
+        const yScale = (y)=> padT + innerH - (innerH * (maxY<=0 ? 0 : y/maxY));
+
+        const sbPath = rows.map((r,i)=> `${i===0?"M":"L"} ${xScale(r.x).toFixed(2)} ${yScale(r.sb).toFixed(2)}`).join(" ");
+        const bbPath = rows.map((r,i)=> `${i===0?"M":"L"} ${xScale(r.x).toFixed(2)} ${yScale(r.bb).toFixed(2)}`).join(" ");
+
+        const stopLevel = getStopLevel();
+        const stopX = (stopLevel>=1 && stopLevel<=maxX) ? xScale(stopLevel) : null;
+
+        // axes ticks (simple)
+        const xTicks = Array.from({length: Math.min(8, maxX)}, (_,i)=> i+1).filter(v => v===1 || v===maxX || v%2===0);
+        const yTicks = 4;
+        const yTickVals = Array.from({length: yTicks+1}, (_,i)=> Math.round((maxY*i)/yTicks));
+
+        blindsChart.innerHTML = `
+    <rect x="0" y="0" width="${W}" height="${H}" fill="rgba(255,255,255,0.02)"></rect>
+
+    <!-- axes -->
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}" stroke="rgba(233,238,245,0.55)"></line>
+    <line x1="${padL}" y1="${padT+innerH}" x2="${padL+innerW}" y2="${padT+innerH}" stroke="rgba(233,238,245,0.55)"></line>
+
+    <!-- y ticks -->
+    ${yTickVals.map(v=>{
+            const y = yScale(v);
+            return `
+        <line x1="${padL}" y1="${y}" x2="${padL+innerW}" y2="${y}" stroke="rgba(233,238,245,0.10)"></line>
+        <text x="${padL-10}" y="${y+4}" text-anchor="end" font-size="12" fill="rgba(233,238,245,0.85)" class="mono">${escapeHtml(String(v))}</text>
+      `;
+        }).join("")}
+
+    <!-- x ticks -->
+    ${xTicks.map(v=>{
+            const x = xScale(v);
+            return `
+        <line x1="${x}" y1="${padT+innerH}" x2="${x}" y2="${padT+innerH+6}" stroke="rgba(233,238,245,0.35)"></line>
+        <text x="${x}" y="${padT+innerH+24}" text-anchor="middle" font-size="12" fill="rgba(233,238,245,0.85)" class="mono">${escapeHtml(String(v))}</text>
+      `;
+        }).join("")}
+
+    <!-- stop line (vertical marker at stop level) -->
+    ${stopX ? `
+      <line x1="${stopX}" y1="${padT}" x2="${stopX}" y2="${padT+innerH}" stroke="rgba(255,193,7,0.75)" stroke-dasharray="6,6"></line>
+      <text x="${stopX}" y="${padT+12}" text-anchor="middle" font-size="12" fill="rgba(255,193,7,0.95)" class="mono">Rebuy/Add-on Stop</text>
+    ` : ""}
+
+    <!-- lines -->
+    <path d="${sbPath}" fill="none" stroke="rgba(96,165,250,0.95)" stroke-width="2.5"></path>
+    <path d="${bbPath}" fill="none" stroke="rgba(87,227,137,0.95)" stroke-width="2.5"></path>
+
+    <!-- legend -->
+    <rect x="${padL+8}" y="${padT+8}" width="160" height="54" rx="10" fill="rgba(11,15,20,0.55)" stroke="rgba(255,255,255,0.10)"></rect>
+    <line x1="${padL+20}" y1="${padT+26}" x2="${padL+50}" y2="${padT+26}" stroke="rgba(96,165,250,0.95)" stroke-width="3"></line>
+    <text x="${padL+60}" y="${padT+30}" font-size="12" fill="rgba(233,238,245,0.92)" class="mono">SB</text>
+    <line x1="${padL+20}" y1="${padT+46}" x2="${padL+50}" y2="${padT+46}" stroke="rgba(87,227,137,0.95)" stroke-width="3"></line>
+    <text x="${padL+60}" y="${padT+50}" font-size="12" fill="rgba(233,238,245,0.92)" class="mono">BB</text>
+
+    <!-- axis labels -->
+    <text x="${padL+innerW/2}" y="${H-10}" text-anchor="middle" font-size="12" fill="rgba(233,238,245,0.85)" class="mono">Level</text>
+    <text x="14" y="${padT+innerH/2}" text-anchor="middle" font-size="12" fill="rgba(233,238,245,0.85)" transform="rotate(-90 14 ${padT+innerH/2})" class="mono">Blinds</text>
+  `;
+    }
+
+
+
+    function estimateTournamentDurationMinutes(){
+        const t = tournamentCache || {};
+        const players = Math.max(2, Number(t.playersCount || playersCache?.length || 2));
+        const startStack = Math.max(1, Number(t.startStack || t.startStackChips || t.startStackValue || t.startStackAmount || t.startStackChips || t.startStack || t.startStackChips || 20000));
+
+        const sb0 = Math.max(1, Math.round(Number(genStartSb?.value || 100)));
+        const { bbFactor } = getStructureAutoSettings();
+        const bb0 = Math.max(1, sb0 * bbFactor);
+
+        const levelMin = Math.max(1, Math.round(Number(genLevelMinutes?.value || 15)));
+        const growth = Math.max(1.01, Number(genGrowth?.value || 1.30));
+
+        // heuristic target: tournament tends to end when average stack is ~ 10–20 BB.
+        // more players => closer to 20BB, fewer players => closer to 12BB
+        const targetBBs = Math.min(22, Math.max(12, 10 + (Math.log2(players) * 2.5)));
+
+        // target BB where avg stack ~= targetBBs
+        const bbTarget = Math.max(bb0, startStack / targetBBs);
+
+        // continuous-time approximation (NOT based on counting levels):
+        // BB(t) = BB0 * growth^(t/levelMin)  => t = levelMin * ln(BBtarget/BB0) / ln(growth)
+        const tMinutes = levelMin * (Math.log(bbTarget / bb0) / Math.log(growth));
+
+        // add average breaks up to that time (approx by expected number of level transitions)
+        const breakEvery = Math.max(0, Math.round(Number(genBreakEvery?.value || 0)));
+        const breakMin = Math.max(0, Math.round(Number(genBreakMinutes?.value || 0)));
+        let breakExtra = 0;
+        if(breakEvery > 0 && breakMin > 0){
+            const estLevels = Math.max(0, Math.floor(tMinutes / levelMin));
+            const breaks = Math.floor(estLevels / breakEvery);
+            breakExtra = breaks * breakMin;
+        }
+
+        const total = Math.max(0, tMinutes + breakExtra);
+        return Math.round(total);
+    }
+
+    function renderDurationEstimate(){
+        if(!tournamentDurationEstimate) return;
+
+        const mins = estimateTournamentDurationMinutes();
+        if(!Number.isFinite(mins) || mins <= 0){
+            tournamentDurationEstimate.textContent = "—";
+            tournamentDurationHint.textContent = "";
+            return;
+        }
+
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        tournamentDurationEstimate.textContent = `${h}h ${String(m).padStart(2,"0")}m`;
+
+        const stopLevel = getStopLevel();
+        tournamentDurationHint.textContent =
+            stopLevel > 0
+                ? `Formel-basiert (BB-Ziel aus Startstack/Spieler). Rebuy/Add-on Stop bei Level ${stopLevel}.`
+                : `Formel-basiert (BB-Ziel aus Startstack/Spieler).`;
+    }
 
 
 </script>
